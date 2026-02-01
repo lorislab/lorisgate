@@ -36,7 +36,7 @@
         <tkit-docs.indexIncludeHeader>false</tkit-docs.indexIncludeHeader>
 
         <!-- Quarkus configuration -->
-        <quarkus.version>3.31.0.CR1</quarkus.version>
+        <quarkus.version>3.31.1</quarkus.version>
 
         <!-- Maven configuration -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
