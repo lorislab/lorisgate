@@ -1,0 +1,22 @@
+FROM registry.access.redhat.com/ubi10/ubi-minimal:10.1-1769677092 AS min
+
+FROM registry.access.redhat.com/ubi10-micro:10.1-1769518576
+#quay.io/quarkus/ubi10-quarkus-micro-image:2.0-2026-02-01
+
+LABEL org.opencontainers.image.source="https://github.com/lorislab/lorisgate"
+LABEL org.opencontainers.image.description="LorisGate is a lightweight, high-performance OIDC (OpenID Connect) and Identity Management (IDM) server designed for the modern web"
+
+WORKDIR /work/
+
+COPY --from=min /usr/lib64/libgcc_s.so.1 /usr/lib64/libstdc++.so.6 /usr/lib64/libz.so.1 /usr/lib64/
+
+RUN chown 1001 /work \
+    && chmod "g+rwX" /work \
+    && chown 1001:root /work
+
+USER 1001
+EXPOSE 8080
+
+CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]
+
+COPY --chown=1001:root --chmod=0755 target/*-runner /work/application

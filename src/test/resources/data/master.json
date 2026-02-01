@@ -1,0 +1,33 @@
+{
+  "name": "master",
+  "displayName": "master realm",
+  "enabled": true,
+  "roles": {
+    "admin": {
+      "description": "Admin role",
+      "enabled": true
+    }
+  },
+  "clients": {
+    "admin-cli": {
+      "clientId": "admin",
+      "clientSecret": "admin",
+      "confidential": true,
+      "scopes": ["openid", "profile", "email"],
+      "roles": ["admin"]
+    }
+  },
+  "users": {
+    "admin": {
+      "id": "admin",
+      "username": "admin",
+      "enabled": true,
+      "roles": ["admin"],
+      "name": "Administrator",
+      "givenName": "Administrator",
+      "familyName": "Administrator",
+      "email": "admin@localhost",
+      "password": "admin"
+    }
+  }
+}

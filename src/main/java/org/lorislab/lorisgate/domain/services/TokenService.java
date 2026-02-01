@@ -1,0 +1,135 @@
+package org.lorislab.lorisgate.domain.services;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.lorislab.lorisgate.config.LorisGateConfig;
+import org.lorislab.lorisgate.domain.model.ClaimNames;
+import org.lorislab.lorisgate.domain.model.Client;
+import org.lorislab.lorisgate.domain.model.RefreshToken;
+import org.lorislab.lorisgate.domain.model.User;
+
+import io.smallrye.jwt.build.Jwt;
+import io.smallrye.jwt.build.JwtClaimsBuilder;
+
+@ApplicationScoped
+public class TokenService {
+
+    @Inject
+    LorisGateConfig config;
+
+    @Inject
+    KeyManager keyManager;
+
+    public JwtClaims parse(String issuer, String token) throws TokenValidationException {
+        try {
+            JwtConsumer consumer = new JwtConsumerBuilder()
+                    .setRequireExpirationTime()
+                    .setAllowedClockSkewInSeconds(config.oidc().tokenSkew())
+                    .setExpectedIssuer(issuer)
+                    .setVerificationKey(keyManager.getPublicKey())
+                    .setSkipDefaultAudienceValidation()
+                    .build();
+
+            return consumer.processToClaims(token);
+        } catch (Exception e) {
+            throw new TokenValidationException(e);
+        }
+    }
+
+    public RefreshToken parseRefreshToken(String issuer, String token) throws TokenValidationException {
+        var tmp = parse(issuer, token);
+        return new RefreshToken(tmp);
+    }
+
+    public String createIdToken(String issuer, User user, Client client, String nonce) {
+        Instant now = Instant.now();
+        Instant exp = now.plusSeconds(config.oidc().tokenLifetime());
+
+        JwtClaimsBuilder id = Jwt.claims();
+        id.issuer(issuer)
+                .subject(user.getId())
+                .issuedAt(now.getEpochSecond())
+                .expiresAt(exp.getEpochSecond())
+                .audience(client.getClientId())
+                .claim(ClaimNames.PREFERRED_USERNAME, user.getUsername());
+        if (nonce != null) {
+            id.claim(ClaimNames.NONCE, nonce);
+        }
+        return id.jws().keyId(keyManager.getKid()).sign(keyManager.getPrivateKey());
+    }
+
+    public String createAccessToken(String issuer, User user, Client client, Set<String> scopes) {
+        Instant now = Instant.now();
+        Instant exp = now.plusSeconds(config.oidc().tokenLifetime());
+
+        JwtClaimsBuilder access = Jwt.claims();
+        access.issuer(issuer)
+                .issuedAt(now.getEpochSecond())
+                .expiresAt(exp.getEpochSecond())
+                .claim(ClaimNames.JTI, UUID.randomUUID().toString())
+                .audience(client.getClientId());
+
+        if (user != null) {
+            access.groups(user.getGroups());
+            access.subject(user.getId())
+                    .claim(ClaimNames.PREFERRED_USERNAME, user.getUsername())
+                    .claim(ClaimNames.EMAIL, user.getEmail())
+                    .claim(ClaimNames.FAMILY_NAME, user.getFamilyName())
+                    .claim(ClaimNames.GIVEN_NAME, user.getGivenName())
+                    .claim(ClaimNames.NAME, user.getName())
+                    .claim(ClaimNames.EMAIL_VERIFIED, user.isEmailVerified())
+                    .claim(ClaimNames.REALM_ROLES, Map.of(ClaimNames.ROLES, user.getRoles()));
+        } else {
+            access.subject("client:" + client.getClientId()).claim(ClaimNames.CLIENT_ID, client.getClientId());
+        }
+
+        if (scopes != null) {
+            access.scope(scopes);
+        }
+
+        return access.jws().keyId(keyManager.getKid()).sign(keyManager.getPrivateKey());
+    }
+
+    public String createRefreshToken(String issuer, String clientId, String username, Set<String> scopes) {
+        var result = Jwt.claims()
+                .subject(UUID.randomUUID().toString())
+                .claim(ClaimNames.JTI, UUID.randomUUID().toString())
+                .issuedAt(Instant.now().getEpochSecond())
+                .expiresAt(Instant.now().plusSeconds(config.oidc().refreshLifetime()).getEpochSecond())
+                .issuer(issuer)
+                .audience(issuer)
+                .preferredUserName(username)
+                .claim(ClaimNames.TYP, "Refresh")
+                .claim(ClaimNames.AZP, clientId);
+
+        if (scopes != null) {
+            result.claim(ClaimNames.SCOPE, scopes);
+        }
+
+        return result.jws().keyId(keyManager.getKid()).sign(keyManager.getPrivateKey());
+    }
+
+    public String rotateRefreshToken(RefreshToken token) {
+        return createRefreshToken(token.getIssuer(), token.getClientId(), token.getUsername(), token.getScopes());
+    }
+
+    public static class TokenValidationException extends RuntimeException {
+        public TokenValidationException(Throwable t) {
+            super(t);
+        }
+
+        public TokenValidationException(String message, Throwable t) {
+            super(message, t);
+        }
+    }
+
+}

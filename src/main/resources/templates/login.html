@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Sign in to {container.realm}</title>
+        <style>
+            html, body { height: 100%; margin: 0; }
+            body { font-family: Arial, Helvetica, sans-serif; background: #f5f7fb; display: flex; align-items: center; justify-content: center; padding: 24px; }
+            .card { width: 100%; max-width: 420px; background: #ffffff; border: 1px solid #e6e9f0; border-radius: 12px; padding: 28px 32px; /* equal left/right padding */ box-sizing: border-box; }
+            .brand { align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; text-align: center; }
+            .brand h1 { font-size: 24px; margin: 0; font-weight: 800; color: #1b2a4e; white-space: nowrap; }
+            .brand h2 { font-size: 16px; margin: 5px; font-weight: 600; color: #1b2a4e; white-space: nowrap; }
+            form { display: block; width: 100%; }
+            label { display: block; margin-top: 14px; font-weight: 600; color: #2b3a5b; }
+            input[type="text"],
+            input[type="password"] { width: 100%; box-sizing: border-box; /* includes padding in width calculation */ margin-top: 6px; padding: 10px 12px; border: 1px solid #cfd7e6; border-radius: 8px; font-size: 15px; background: #fff; }
+            input[type="text"]:focus,
+            input[type="password"]:focus { outline: none; border-color: #4d73ff; box-shadow: 0 0 0 3px rgba(77, 115, 255, 0.15); }
+            .actions { margin-top: 22px; text-align: center; /* center the button */ }
+            .actions button { width: 100%; /* you can change to 100% if you prefer full width */ padding: 12px; font-size: 16px; font-weight: 600; color: #ffffff; background: #0057b8; border: none; border-radius: 8px; cursor: pointer; }
+            .actions button:hover { background: #00499a; }
+        </style>
+    </head>
+    <body>
+        <main class="card">
+            <div class="brand">
+                <h1>{container.realm}</h1>
+                <h2>Sign in to your account</h2>
+            </div>
+
+            <form method="post">
+
+                <input type="hidden" name="return_to" value="{container.returnTo}"/>
+                <label for="username">Username</label>
+                <input id="username" name="username" type="text" autocomplete="username" required />
+
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required />
+
+                <div class="actions">
+                    <button type="submit">Sign In</button>
+                </div>
+            </form>
+        </main>
+    </body>
+</html>

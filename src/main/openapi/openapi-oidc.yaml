@@ -1,0 +1,862 @@
+---
+openapi: 3.0.3
+info:
+  title: lorisgate OIDC services
+  version: 1.0.0
+servers:
+  - url: "http://lorisgate:8080"
+tags:
+  - name: token
+  - name: auth
+  - name: user
+  - name: config
+paths:
+  /realms/{realm}/login-actions/authenticate:
+    get:
+      operationId: loginPage
+      tags:
+        - auth
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: return_to
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: login page
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Login user and continue authorization flow
+      description: |
+        Validates user credentials.  
+        On success, redirects to the specified `return_to` URL with an appended `as_user` query parameter.  
+        On failure, returns 401 with error text.
+      operationId: doLogin
+      tags:
+        - auth
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: Username to authenticate.
+                password:
+                  type: string
+                  format: password
+                  description: Password for authentication.
+                return_to:
+                  type: string
+                  nullable: true
+                  description: Callback URL.  If missing, server will redirect to `/`.
+      responses:
+        302:
+          description: Redirect after successful login
+          headers:
+            Location:
+              description: Redirect target with appended `as_user` query parameter.
+              schema:
+                type: string
+        401:
+          description: Invalid credentials
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Invalid credentials"
+  /realms/{realm}/protocol/openid-connect/auth:
+    get:
+      summary: OAuth2/OIDC authorization endpoint
+      description: |
+        Starts the OAuth 2.0/OIDC authorization flow.
+        - If `response_type=code`, the user is redirected to `redirect_uri` with `?code=...` (and optional `state`).
+        - If `response_type` is `id_token`, `token`, or `token id_token` (Implicit), the user is redirected with values in the URI **fragment**.
+        - If the user is not logged in (no `as_user`), the user agent is redirected to login page.
+      tags:
+        - auth
+      operationId: authorize
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - in: query
+          name: response_type
+          required: true
+          schema:
+            type: string
+            enum: [code, id_token, token, "token id_token", "id_token token"]
+          description: Response type (Authorization Code or Implicit).
+        - in: query
+          name: client_id
+          required: true
+          schema:
+            type: string
+          description: OAuth client identifier.
+          example: web-portal
+        - in: query
+          name: redirect_uri
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: Registered redirect URI for the client.
+        - in: query
+          name: scope
+          required: false
+          schema:
+            type: string
+            description: Space-delimited scopes.
+        - in: query
+          name: state
+          required: false
+          schema:
+            type: string
+          description: Opaque value to maintain state between request and callback.
+        - in: query
+          name: nonce
+          required: false
+          schema:
+            type: string
+          description: String value used to associate a client session with an ID token (for Implicit/Hybrid).
+        - in: query
+          name: code_challenge
+          required: false
+          schema:
+            type: string
+          description: PKCE code challenge, required for public clients using Authorization Code.
+        - in: query
+          name: code_challenge_method
+          required: false
+          schema:
+            type: string
+            enum: [plain, S256]
+            default: plain
+          description: PKCE code challenge method (default `plain`).
+        - in: query
+          name: as_user
+          required: false
+          schema:
+            type: string
+          description: Set internally by the login flow to indicate the authenticated username.
+      responses:
+        302:
+          description: Redirect to client or to login
+          headers:
+            Location:
+              description: |
+                Redirect target.
+                **Authorization Code:** `redirect_uri?code=...&state=...`  
+                **Implicit:** `redirect_uri#access_token=...&token_type=bearer&expires_in=3600&id_token=...&state=...`  
+                **Login required:** `/oidc/login?return_to=ENCODED_ORIGINAL_AUTH_REQUEST`
+              schema:
+                type: string
+        400:
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthError'
+  /realms/{realm}/protocol/openid-connect/certs:
+    get:
+      operationId: getJwks
+      summary: Retrieve JSON Web Key Set (JWKS)
+      description: Returns the public keys in JWKS format used for verifying JWS signatures.
+      tags:
+        - config
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: JWKS document
+          headers:
+            Cache-Control:
+              description: Caching policy for the JWKS (providers commonly allow caching).
+              schema:
+                type: string
+            Expires:
+              description: Expiration time for caches, if provided.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Jwks'
+        404:
+          description: Not found
+        500:
+          description: Server error
+
+  /realms/{realm}/protocol/openid-connect/userinfo:
+    get:
+      summary: Get user info from JWT
+      description: |
+        Validates the `Authorization: Bearer <token>` header, verifies the JWT (issuer, exp, skew, signature),
+        and returns a filtered user info object:
+        - `sub` (subject) is always returned
+        - `preferred_username` (if present in JWT)
+        - `roles` populated from the `groups` claim (if present)
+        - `scope` (if present; supports string or array of strings)
+      operationId: getUserinfo
+      tags:
+        - user
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: User info extracted from the validated token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+        401:
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorToken'
+  /realms/{realm}/protocol/openid-connect/token:
+    post:
+      tags:
+        - token
+      description: OAuth 2.0 Token
+      operationId: getToken
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: Authorization
+          required: false
+          in: header
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/TokenRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/OAuth2TokenSuccess'
+        '400':
+          $ref: '#/components/responses/OAuth2TokenError'
+        '401':
+          $ref: '#/components/responses/OAuth2TokenError'
+
+  /realms/{realm}/.well-known/openid-configuration:
+    get:
+      tags:
+        - config
+      description: OpenID Provider Configuration
+      operationId: getOpenIdConfiguration
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          $ref: '#/components/responses/OpenIdConfigurationResponse'
+components:
+  requestBodies:
+    TokenRequest:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            required:
+              - grant_type
+              - client_id
+            properties:
+              grant_type:
+                type: string
+                enum:
+                  - authorization_code
+                  - password
+                  - client_credentials
+              client_id:
+                type: string
+              client_secret:
+                type: string
+              username:
+                type: string
+              password:
+                type: string
+              scope:
+                type: string
+                description: "Space-delimited scopes"
+              code:
+                type: string
+              redirect_uri:
+                type: string
+              code_verifier:
+                type: string
+              refresh_token:
+                type: string
+  responses:
+    OpenIdConfigurationResponse:
+      description: OpenID Provider Configuration (OIDC Discovery document)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OpenIdConfiguration'
+    OAuth2TokenSuccess:
+      description: OAuth 2.0 token response
+      headers:
+        Cache-Control:
+          description: Per best practice, token responses are not cacheable.
+          schema:
+            type: string
+            example: no-store
+        Pragma:
+          description: Backward-compatible header to prevent caching.
+          schema:
+            type: string
+            example: no-cache
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenSuccess'
+          examples:
+            client_credentials:
+              summary: Client Credentials (no id_token, optional scope)
+              value:
+                access_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...clientcred
+                token_type: bearer
+                expires_in: 3600
+                scope: "read write"
+            password_with_openid:
+              summary: Resource Owner Password + openid (returns id_token)
+              value:
+                access_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...pwd
+                token_type: bearer
+                expires_in: 3600
+                scope: "openid profile email"
+                id_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...idpwd
+            authorization_code_with_openid:
+              summary: Authorization Code (PKCE if public client) + openid
+              value:
+                access_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...code
+                token_type: bearer
+                expires_in: 3600
+                scope: "openid"
+                id_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...idcode
+
+    OAuth2TokenError:
+      description: OAuth 2.0 error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenError'
+          examples:
+            invalid_request:
+              value:
+                error: invalid_request
+                error_description: "client_id and grant_type are required"
+            invalid_client:
+              value:
+                error: invalid_client
+                error_description: "Invalid client credentials"
+            invalid_grant:
+              value:
+                error: invalid_grant
+                error_description: "Invalid credentials"
+            unsupported_grant_type:
+              value:
+                error: unsupported_grant_type
+                error_description: "Supported: authorization_code, password, client_credentials"
+            server_error:
+              value:
+                error: server_error
+                error_description: "An unexpected error occurred"
+
+  schemas:
+    TokenSuccess:
+      type: object
+      description: >
+        Successful token response. In this implementation, `token_type` is always `bearer` (lowercase).
+        `id_token` is included only when a user is present **and** the `openid` scope was granted (i.e., not for client_credentials).
+      additionalProperties: false
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: Signed JWT access token.
+          example: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...access
+        refresh_token:
+          type: string
+          description: Signed JWT refresh token.
+          example: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...access
+        token_type:
+          type: string
+          description: Token type indicator. This implementation returns `bearer`.
+          enum: [ Bearer ]
+        expires_in:
+          type: integer
+          format: int64
+          description: Lifetime of the access token in seconds.
+        refresh_expires_in:
+          type: integer
+          format: int64
+          description: Lifetime of the refresh token in seconds.
+        scope:
+          type: string
+          description: Space-delimited list of granted scopes (present if any scopes were granted).
+        id_token:
+          type: string
+          description: >
+            Signed JWT ID Token. Present only for user flows when the `openid` scope was requested and granted.
+            Not returned for the `client_credentials` grant.
+          example: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...id
+
+    TokenError:
+      type: object
+      description: Error response body returned for invalid requests, invalid clients, invalid grants, or unsupported grant types.
+      additionalProperties: false
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: OAuth 2.0 error code.
+          enum:
+            - invalid_request
+            - invalid_client
+            - invalid_grant
+            - unsupported_grant_type
+            - server_error
+        error_description:
+          type: string
+          description: Human-readable description of the error.
+          example: "username and password required"
+    OpenIdConfiguration:
+      type: object
+      required:
+        - issuer
+        - authorization_endpoint
+        - jwks_uri
+        - id_token_signing_alg_values_supported
+        - response_types_supported
+        - subject_types_supported
+      properties:
+        issuer:
+          type: string
+          format: uri
+          description: >
+            Identifier for the issuer (must be a URL that uses HTTPS). Clients must match this exactly.
+          example: https://auth.example.com
+        authorization_endpoint:
+          type: string
+          format: uri
+          description: OAuth 2.0 authorization endpoint.
+          example: https://auth.example.com/oauth2/v2.0/authorize
+        token_endpoint:
+          type: string
+          format: uri
+          description: OAuth 2.0 token endpoint.
+          example: https://auth.example.com/oauth2/v2.0/token
+        device_authorization_endpoint:
+          type: string
+          format: uri
+          description: OAuth 2.0 device authorization endpoint (if device flow is supported).
+          example: https://auth.example.com/oauth2/v2.0/devicecode
+        userinfo_endpoint:
+          type: string
+          format: uri
+          description: OIDC UserInfo endpoint (present if supported).
+          example: https://auth.example.com/oidc/userinfo
+        end_session_endpoint:
+          type: string
+          format: uri
+          description: RP-initiated logout endpoint (OIDC Front/Back-Channel Logout extensions).
+          example: https://auth.example.com/oidc/logout
+        revocation_endpoint:
+          type: string
+          format: uri
+          description: OAuth 2.0 token revocation endpoint (RFC 7009).
+          example: https://auth.example.com/oauth2/v2.0/revoke
+        introspection_endpoint:
+          type: string
+          format: uri
+          description: OAuth 2.0 token introspection endpoint (RFC 7662).
+          example: https://auth.example.com/oauth2/v2.0/introspect
+        jwks_uri:
+          type: string
+          format: uri
+          description: URL of the JSON Web Key Set (JWKS) used to verify signatures.
+          example: https://auth.example.com/oidc/discovery/keys
+        registration_endpoint:
+          type: string
+          format: uri
+          description: Dynamic client registration endpoint (if supported).
+          example: https://auth.example.com/oidc/register
+        scopes_supported:
+          type: array
+          items:
+            type: string
+          description: Supported OAuth 2.0/OIDC scopes.
+          example: [ "openid", "profile", "email", "offline_access" ]
+        response_types_supported:
+          type: array
+          items:
+            type: string
+          description: >
+            Supported OAuth 2.0 response types. Typical values include "code", "id_token", "token id_token".
+          example: [ "code", "id_token", "code id_token", "code token", "code id_token token" ]
+        response_modes_supported:
+          type: array
+          items:
+            type: string
+            enum: [ query, fragment, form_post, jwt ]
+          description: Supported OAuth 2.0 response modes.
+          example: [ "query", "fragment", "form_post" ]
+        grant_types_supported:
+          type: array
+          items:
+            type: string
+          description: Supported OAuth 2.0 grant types.
+          example: [ "authorization_code", "refresh_token", "client_credentials", "password", "urn:ietf:params:oauth:grant-type:device_code" ]
+        subject_types_supported:
+          type: array
+          items:
+            type: string
+            enum: [ public, pairwise ]
+          description: Subject identifier types supported.
+          example: [ "public" ]
+        id_token_signing_alg_values_supported:
+          type: array
+          items:
+            type: string
+          description: >
+            JWS signing algorithms supported for ID tokens (alg). Common: RS256, ES256, PS256.
+          example: [ "RS256" ]
+        id_token_encryption_alg_values_supported:
+          type: array
+          items:
+            type: string
+          description: JWE key management algorithms supported for ID token encryption.
+          example: [ "RSA-OAEP", "RSA-OAEP-256" ]
+        id_token_encryption_enc_values_supported:
+          type: array
+          items:
+            type: string
+          description: JWE content encryption algorithms supported for ID token encryption.
+          example: [ "A256GCM" ]
+        token_endpoint_auth_methods_supported:
+          type: array
+          items:
+            type: string
+            enum:
+              - client_secret_basic
+              - client_secret_post
+              - client_secret_jwt
+              - private_key_jwt
+              - none
+          description: Supported client authentication methods for token endpoint.
+          example: [ "client_secret_basic", "private_key_jwt" ]
+        token_endpoint_auth_signing_alg_values_supported:
+          type: array
+          items:
+            type: string
+          description: >
+            JWS alg values supported for client assertions at the token endpoint (for *jwt* auth methods).
+          example: [ "RS256", "PS256", "ES256" ]
+        introspection_endpoint_auth_methods_supported:
+          type: array
+          items:
+            type: string
+          description: Supported client auth methods for introspection endpoint.
+          example: [ "client_secret_basic", "private_key_jwt" ]
+        revocation_endpoint_auth_methods_supported:
+          type: array
+          items:
+            type: string
+          description: Supported client auth methods for revocation endpoint.
+          example: [ "client_secret_basic", "private_key_jwt" ]
+        claims_supported:
+          type: array
+          items:
+            type: string
+          description: Supported claim names that MAY be returned in ID token/UserInfo.
+          example: [ "sub", "aud", "iss", "exp", "iat", "auth_time", "nonce", "name", "given_name", "family_name", "email" ]
+        request_parameter_supported:
+          type: boolean
+          description: Whether the "request" parameter (JWT) is supported.
+          example: true
+        request_uri_parameter_supported:
+          type: boolean
+          description: Whether the "request_uri" parameter is supported.
+          example: true
+        require_request_uri_registration:
+          type: boolean
+          description: Whether request_uri values must be pre-registered.
+          example: false
+        claims_parameter_supported:
+          type: boolean
+          description: Whether the "claims" request parameter is supported.
+          example: true
+        acr_values_supported:
+          type: array
+          items:
+            type: string
+          description: Supported ACR values.
+          example: [ "urn:mace:incommon:iap:silver", "urn:mace:incommon:iap:bronze" ]
+        code_challenge_methods_supported:
+          type: array
+          items:
+            type: string
+            enum: [ plain, S256 ]
+          description: PKCE code challenge methods supported.
+          example: [ "S256" ]
+        backchannel_logout_supported:
+          type: boolean
+          description: Whether OIDC Back-Channel Logout is supported.
+          example: true
+        backchannel_logout_session_supported:
+          type: boolean
+          description: Whether back-channel logout with session IDs is supported.
+          example: true
+        frontchannel_logout_supported:
+          type: boolean
+          description: Whether OIDC Front-Channel Logout is supported.
+          example: true
+        frontchannel_logout_session_supported:
+          type: boolean
+          description: Whether front-channel logout with session IDs is supported.
+          example: true
+        mtls_endpoint_aliases:
+          type: object
+          description: >
+            OAuth 2.0 mTLS endpoint aliases (RFC 8705). Values mirror the primary endpoints but require mTLS.
+          additionalProperties:
+            type: string
+            format: uri
+          example:
+            token_endpoint: https://mtls.auth.example.com/oauth2/v2.0/token
+            revocation_endpoint: https://mtls.auth.example.com/oauth2/v2.0/revoke
+            introspection_endpoint: https://mtls.auth.example.com/oauth2/v2.0/introspect
+        service_documentation:
+          type: string
+          format: uri
+          description: Link to human-readable service documentation of the provider.
+          example: https://docs.example.com/identity
+        ui_locales_supported:
+          type: array
+          items:
+            type: string
+          description: Supported UI locales as BCP47 language tags.
+          example: [ "en-US", "de-DE" ]
+        op_policy_uri:
+          type: string
+          format: uri
+          description: Provider policy page.
+          example: https://auth.example.com/policy
+        op_tos_uri:
+          type: string
+          format: uri
+          description: Provider terms of service page.
+          example: https://auth.example.com/terms
+        # PAR (Pushed Authorization Requests)
+        pushed_authorization_request_endpoint:
+          type: string
+          format: uri
+          description: PAR endpoint (RFC 9126).
+          example: https://auth.example.com/oauth2/v2.0/par
+        require_pushed_authorization_requests:
+          type: boolean
+          description: Whether PAR is required by the AS.
+          example: false
+        # JAR / JARM
+        request_object_signing_alg_values_supported:
+          type: array
+          items:
+            type: string
+          description: JWS alg values supported for Request Objects.
+          example: [ "RS256", "PS256", "ES256" ]
+        request_object_encryption_alg_values_supported:
+          type: array
+          items:
+            type: string
+          description: JWE key management algs supported for Request Object encryption.
+          example: [ "RSA-OAEP", "RSA-OAEP-256" ]
+        request_object_encryption_enc_values_supported:
+          type: array
+          items:
+            type: string
+          description: JWE content encryption algs supported for Request Object encryption.
+          example: [ "A256GCM" ]
+        # DPoP
+        dpop_signing_alg_values_supported:
+          type: array
+          items:
+            type: string
+          description: >
+            Algorithms supported for DPoP proof JWTs (draft-ietf-oauth-dpop).
+          example: [ "ES256", "RS256" ]
+        # Misc/Extensions
+        display_values_supported:
+          type: array
+          items:
+            type: string
+          description: Values supported for the "display" parameter.
+          example: [ "page", "popup" ]
+        claims_locales_supported:
+          type: array
+          items:
+            type: string
+          description: Supported claims locales as BCP47 tags.
+          example: [ "en", "de" ]
+        tls_client_certificate_bound_access_tokens:
+          type: boolean
+          description: Whether the AS supports certificate-bound access tokens (RFC 8705).
+          example: false
+        check_session_iframe:
+          type: string
+          format: uri
+          description: IFrame for session management (OIDC Session Management draft).
+          example: https://auth.example.com/oidc/checksession
+    UserInfo:
+      type: object
+      required:
+        - sub
+      additionalProperties: false
+      properties:
+        sub:
+          type: string
+          description: Subject identifier from the JWT `sub` claim.
+        name:
+          type: string
+          description: Preferred username from the `name` claim (if present).
+        preferred_username:
+          type: string
+          description: Preferred username from the `preferred_username` claim (if present).
+        given_name:
+          type: string
+          description: Given name from the `given_name` claim (if present).
+        family_name:
+          type: string
+          description: Family name from the `family_name` claim (if present).
+        email:
+          type: string
+          description: Email from the `email` claim (if present).
+        email_verified:
+          type: boolean
+          description: Email verified from the `email_verified` claim (if present).
+    ErrorToken:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          enum: ["invalid_token", "Missing bearer token"]
+          description: Indicates the token was present but invalid (expired, bad signature, wrong issuer, etc.).
+        error_description:
+          type: string
+          description: Diagnostic message from the verification error.
+
+    Jwks:
+      type: object
+      required:
+       - keys
+      properties:
+        keys:
+          type: array
+          description: Array of JWKs.
+          items:
+            $ref: '#/components/schemas/Jwk'
+    Jwk:
+      type: object
+      description: JSON Web Key as defined in RFC 7517.
+      required:
+        - kty
+      properties:
+        kty:
+          type: string
+          description: Key type.
+        use:
+          type: string
+          description: Intended use of the public key ("sig" or "enc").
+          enum: [sig, enc]
+        key_ops:
+          type: array
+          description: Permitted key operations (alternative to 'use').
+          items:
+            type: string
+        alg:
+          type: string
+          description: Algorithm intended for use with the key (e.g., "RS256").
+        kid:
+          type: string
+          description: Key identifier.
+        # --- RSA public key members (when kty == "RSA") ---
+        n:
+          type: string
+          description: RSA modulus, base64url without padding.
+          example: "oahUIzK1...base64url_modulus..."
+        e:
+          type: string
+          description: RSA public exponent, base64url without padding (usually "AQAB").
+          example: "AQAB"
+        # --- EC public key members (when kty == "EC") ---
+        crv:
+          type: string
+          description: Named curve (e.g., "P-256", "P-384", "P-521").
+        x:
+          type: string
+          description: X coordinate for EC keys, base64url.
+        y:
+          type: string
+          description: Y coordinate for EC keys, base64url.
+
+    OAuthError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: OAuth2/OIDC error code
+          enum:
+            - invalid_request
+            - unauthorized_client
+            - access_denied
+            - unsupported_response_type
+            - realm_not_found
+        error_description:
+          type: string
+          description: Human-readable error description (optional).
+

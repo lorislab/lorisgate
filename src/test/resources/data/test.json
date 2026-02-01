@@ -1,0 +1,58 @@
+{
+  "name": "test",
+  "displayName": "test",
+  "enabled": true,
+  "roles": {
+    "user": {
+      "description": "User role",
+      "enabled": true
+    },
+    "editor": {
+      "description": "Editor role",
+      "enabled": false
+    },
+    "service": {
+      "description": "Service role",
+      "enabled": true
+    }
+  },
+  "clients": {
+    "app-backend": {
+      "clientId": "app-backend",
+      "clientSecret": "s3cr3t-value",
+      "confidential": true,
+      "scopes": ["openid", "profile", "email"],
+      "roles": ["service:read", "service:write"],
+      "redirectUris": ["*"]
+    },
+    "web-portal": {
+      "clientId": "web-portal",
+      "confidential": false,
+      "scopes": ["openid", "email"],
+      "roles": ["portal:user"],
+      "redirectUris": ["*"]
+    }
+  },
+  "users": {
+    "alice": {
+      "id": "alice",
+      "username": "alice",
+      "enabled": true,
+      "roles": ["user", "editor"],
+      "groups": ["user", "editor"],
+      "name": "Alice Example",
+      "givenName": "Alice",
+      "familyName": "Example",
+      "email": "alice@example.com",
+      "password": "alice"
+    },
+    "service-bot": {
+      "id": "service-bot",
+      "username": "service-bot",
+      "enabled": true,
+      "groups": ["service"],
+      "roles": ["service"],
+      "password": "service-bot"
+    }
+  }
+}

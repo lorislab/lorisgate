@@ -1,0 +1,20 @@
+FROM registry.access.redhat.com/ubi9/openjdk-25:1.24-2.1769595333
+
+LABEL org.opencontainers.image.source="https://github.com/lorislab/lorisgate"
+LABEL org.opencontainers.image.description="LorisGate is a lightweight, high-performance OIDC (OpenID Connect) and Identity Management (IDM) server designed for the modern web"
+
+ENV LANGUAGE='en_US:en'
+ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+ENV JAVA_APP_JAR="/work/quarkus-run.jar"
+
+WORKDIR /work/
+ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
+
+USER 185
+EXPOSE 8080
+
+COPY --chown=185 target/quarkus-app/lib/ /work/lib/
+COPY --chown=185 target/quarkus-app/*.jar /work/
+COPY --chown=185 target/quarkus-app/app/ /work/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /work/quarkus/
+USER 185
