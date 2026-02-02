@@ -31,6 +31,12 @@
       "scopes": ["openid", "email"],
       "roles": ["portal:user"],
       "redirectUris": ["*"]
+    },
+    "test": {
+      "clientId": "test",
+      "scopes": [],
+      "roles": ["portal:user"],
+      "redirectUris": ["*"]
     }
   },
   "users": {

@@ -54,19 +54,17 @@ public class StoreService {
                 try {
                     log.info("Loading realm file '{}'", path);
                     var data = loadData(path);
-                    if (data != null) {
-                        var realm = objectMapper.readValue(data, RealmDTO.class);
-                        if (realm != null) {
-                            realmService.addRealm(map(realm));
-                            log.info("Realm '{}' added to store.", realm.getName());
-                        }
+                    var realm = objectMapper.readValue(data, RealmDTO.class);
+                    if (realm.getName() != null) {
+                        realmService.addRealm(map(realm));
+                        log.info("Realm '{}' added to store.", realm.getName());
                     }
                 } catch (Exception e) {
-                    log.info("Error loading realm file '{}'.", path, e);
+                    log.error("Error loading realm file '{}'. Error: {}", path, e.getMessage());
                 }
             }
         } catch (IOException e) {
-            log.info("Error searching store directory '{}'.", dir, e);
+            log.error("Error searching store directory '{}'.", dir, e);
         }
 
     }
@@ -75,14 +73,14 @@ public class StoreService {
         var realm = new Realm();
         realm.setName(dto.getName());
         realm.setDisplayName(dto.getDisplayName());
-        realm.setEnabled(dto.getEnabled() == null || dto.getEnabled());
-        if (dto.getRoles() != null) {
+        realm.setEnabled(dto.getEnabled());
+        if (!dto.getRoles().isEmpty()) {
             dto.getRoles().entrySet().forEach(entry -> realm.addRole(mapRole(entry)));
         }
-        if (dto.getClients() != null) {
+        if (!dto.getClients().isEmpty()) {
             dto.getClients().entrySet().forEach(entry -> realm.addClient(mapClient(entry)));
         }
-        if (dto.getUsers() != null) {
+        if (!dto.getUsers().isEmpty()) {
             dto.getUsers().entrySet().forEach(entry -> realm.addUser(mapUser(entry)));
         }
         return realm;
@@ -103,7 +101,7 @@ public class StoreService {
 
         var client = dto.getValue();
         result.setClientSecret(client.getClientSecret());
-        result.setConfidential(client.getConfidential() != null && client.getConfidential());
+        result.setConfidential(client.getConfidential());
         result.setRoles(client.getRoles());
         result.setScopes(client.getScopes());
         result.setRedirectUris(client.getRedirectUris());
@@ -128,9 +126,6 @@ public class StoreService {
     }
 
     private static byte[] loadData(Path path) throws RuntimeException {
-        if (!Files.exists(path)) {
-            return null;
-        }
         try {
             return Files.readAllBytes(path);
         } catch (IOException e) {

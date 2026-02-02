@@ -91,7 +91,7 @@ public class TokenService {
             access.subject("client:" + client.getClientId()).claim(ClaimNames.CLIENT_ID, client.getClientId());
         }
 
-        if (scopes != null) {
+        if (!scopes.isEmpty()) {
             access.scope(scopes);
         }
 
@@ -110,7 +110,7 @@ public class TokenService {
                 .claim(ClaimNames.TYP, TokenTypes.REFRESH)
                 .claim(ClaimNames.AZP, clientId);
 
-        if (scopes != null) {
+        if (!scopes.isEmpty()) {
             result.claim(ClaimNames.SCOPE, scopes);
         }
 
