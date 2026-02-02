@@ -1,7 +1,5 @@
 package org.lorislab.lorisgate.rs.admin.v1.controllers;
 
-import java.util.List;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -11,7 +9,7 @@ import org.lorislab.lorisgate.rs.admin.v1.mappers.RealmMapper;
 
 import gen.org.lorislab.lorisgate.rs.admin.v1.RealmsApi;
 import gen.org.lorislab.lorisgate.rs.admin.v1.model.RealmDTO;
-import gen.org.lorislab.lorisgate.rs.admin.v1.model.RealmItemDTO;
+import gen.org.lorislab.lorisgate.rs.admin.v1.model.RealmSearchResultDTO;
 
 @ApplicationScoped
 public class RealmsRestController implements RealmsApi {
@@ -49,15 +47,16 @@ public class RealmsRestController implements RealmsApi {
     }
 
     @Override
-    public RestResponse<List<RealmItemDTO>> getRealms() {
-        return RestResponse.ok(mapper.mapItems(realmService.realms()));
+    public RestResponse<RealmSearchResultDTO> getRealms() {
+        return RestResponse.ok(mapper.mapResult(realmService.realms()));
     }
 
     @Override
     public RestResponse<Void> updateRealm(String realm, RealmDTO realmDTO) {
-        if (realmService.getRealm(realmDTO.getName()) == null) {
+        if (realmService.getRealm(realm) == null) {
             return RestResponse.notFound();
         }
+        realmDTO.setName(realm);
         realmService.addRealm(mapper.create(realmDTO));
         return RestResponse.ok();
     }

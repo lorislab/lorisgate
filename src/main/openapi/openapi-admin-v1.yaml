@@ -21,7 +21,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RealmItems'
+                $ref: '#/components/schemas/RealmSearchResult'
     post:
       operationId: createRealm
       tags:
@@ -315,11 +315,13 @@ paths:
           description: Client not found
 components:
   schemas:
-    RealmItems:
-      description: List of realm items.
-      type: array
-      items:
-        $ref: '#/components/schemas/RealmItem'
+    RealmSearchResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RealmItem'
     RealmItem:
       type: object
       description: Realm item with name and displayName
