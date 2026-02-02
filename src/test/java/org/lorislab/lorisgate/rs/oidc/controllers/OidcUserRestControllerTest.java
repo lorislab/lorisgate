@@ -13,7 +13,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 @TestHTTPEndpoint(OidcUserRestController.class)
-class OidcUserRestControllerTest extends AbstractAdminTest {
+class OidcUserRestControllerTest extends AbstractOidcTest {
 
     @Test
     void testUserInfo() {

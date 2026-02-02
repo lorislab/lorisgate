@@ -12,10 +12,7 @@ import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.lorislab.lorisgate.config.LorisGateConfig;
-import org.lorislab.lorisgate.domain.model.ClaimNames;
-import org.lorislab.lorisgate.domain.model.Client;
-import org.lorislab.lorisgate.domain.model.RefreshToken;
-import org.lorislab.lorisgate.domain.model.User;
+import org.lorislab.lorisgate.domain.model.*;
 
 import io.smallrye.jwt.build.Jwt;
 import io.smallrye.jwt.build.JwtClaimsBuilder;
@@ -60,6 +57,7 @@ public class TokenService {
                 .issuedAt(now.getEpochSecond())
                 .expiresAt(exp.getEpochSecond())
                 .audience(client.getClientId())
+                .claim(ClaimNames.TYP, TokenTypes.ID)
                 .claim(ClaimNames.PREFERRED_USERNAME, user.getUsername());
         if (nonce != null) {
             id.claim(ClaimNames.NONCE, nonce);
@@ -76,7 +74,8 @@ public class TokenService {
                 .issuedAt(now.getEpochSecond())
                 .expiresAt(exp.getEpochSecond())
                 .claim(ClaimNames.JTI, UUID.randomUUID().toString())
-                .audience(client.getClientId());
+                .audience(client.getClientId())
+                .claim(ClaimNames.TYP, TokenTypes.ACCESS);
 
         if (user != null) {
             access.groups(user.getGroups());
@@ -108,7 +107,7 @@ public class TokenService {
                 .issuer(issuer)
                 .audience(issuer)
                 .preferredUserName(username)
-                .claim(ClaimNames.TYP, "Refresh")
+                .claim(ClaimNames.TYP, TokenTypes.REFRESH)
                 .claim(ClaimNames.AZP, clientId);
 
         if (scopes != null) {
@@ -125,10 +124,6 @@ public class TokenService {
     public static class TokenValidationException extends RuntimeException {
         public TokenValidationException(Throwable t) {
             super(t);
-        }
-
-        public TokenValidationException(String message, Throwable t) {
-            super(message, t);
         }
     }
 

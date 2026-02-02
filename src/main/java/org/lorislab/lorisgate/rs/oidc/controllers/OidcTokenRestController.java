@@ -236,11 +236,11 @@ public class OidcTokenRestController implements TokenApi {
                 .expiresIn(config.oidc().tokenLifetime())
                 .tokenType(TokenSuccessDTO.TokenTypeEnum.BEARER);
 
-        if (scopes != null) {
+        if (!scopes.isEmpty()) {
             dto.scope(Scopes.fromScopes(scopes));
         }
 
-        if (user != null && scopes != null && scopes.contains(Scopes.OPENID)) {
+        if (user != null && !scopes.isEmpty() && scopes.contains(Scopes.OPENID)) {
             dto.idToken(tokenService.createIdToken(issuer, user, client, nonce));
         }
 

@@ -54,6 +54,7 @@
         <openapitools.openapi-generator-maven-plugin.version>7.19.0</openapitools.openapi-generator-maven-plugin.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <assertj.version>3.27.6</assertj.version>
+        <htmlunit.version>4.21.0</htmlunit.version>
 
         <!-- Jacoco/Sonar -->
         <sonar.cpd.exclusions>**/mapper/**,**/mappers/**,**/dtos/**,**/dto/**,**/gen/**</sonar.cpd.exclusions>
@@ -79,6 +80,12 @@
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
                 <version>${assertj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.htmlunit</groupId>
+                <artifactId>htmlunit</artifactId>
+                <version>${htmlunit.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -162,6 +169,11 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.htmlunit</groupId>
+            <artifactId>htmlunit</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

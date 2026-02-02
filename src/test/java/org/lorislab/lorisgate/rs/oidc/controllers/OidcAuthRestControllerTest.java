@@ -10,7 +10,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 @TestHTTPEndpoint(OidcAuthRestController.class)
-class OidcAuthRestControllerTest extends AbstractAdminTest {
+class OidcAuthRestControllerTest extends AbstractOidcTest {
     @Test
     void testAuth() throws Exception {
 
