@@ -2,11 +2,13 @@
 openapi: 3.0.3
 info:
   title: lorisgate OIDC services
-  version: 1.0.0
+  version: 1.0.0-alpha1
 servers:
   - url: "http://lorisgate:8080"
 tags:
   - name: realms
+  - name: users
+  - name: clients
 paths:
   /admin/realms:
     get:
@@ -20,6 +22,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RealmItems'
+    post:
+      operationId: createRealm
+      tags:
+        - realms
+      requestBody:
+        description: Realm data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Realm'
+      responses:
+        201:
+          description: Realm created
+        409:
+          description: User already exists
   /admin/realms/{realm}:
     get:
       operationId: getRealm
@@ -40,6 +57,262 @@ paths:
                 $ref: '#/components/schemas/Realm'
         404:
           description: Realm not found
+    put:
+      operationId: updateRealm
+      tags:
+        - realms
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        description: Realm data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Realm'
+      responses:
+        200:
+          description: Realm updated
+        404:
+          description: Realm not found
+    delete:
+      operationId: deleteRealm
+      tags:
+        - realms
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: Realm deleted
+        404:
+          description: Realm not found
+  /admin/realms/{realm}/users:
+    get:
+      operationId: getUsers
+      tags:
+        - users
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: Response list of realm users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: createUser
+      tags:
+        - users
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        201:
+          description: User created
+        409:
+          description: User already exists
+  /admin/realms/{realm}/users/{username}:
+    get:
+      operationId: getUser
+      tags:
+        - users
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: username
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: Response corresponding user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: User not found
+    put:
+      operationId: updateUser
+      tags:
+        - users
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: username
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        200:
+          description: User updated
+        404:
+          description: User not found
+    delete:
+      operationId: deleteUser
+      tags:
+        - users
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: username
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: User deleted
+        404:
+          description: User not found
+  /admin/realms/{realm}/clients:
+    get:
+      operationId: getClients
+      tags:
+        - clients
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: Response list of realm clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+    post:
+      operationId: createClient
+      tags:
+        - clients
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+      responses:
+        201:
+          description: Client created
+        409:
+          description: Client already exists
+  /admin/realms/{realm}/clients/{clientId}:
+    get:
+      operationId: getClient
+      tags:
+        - clients
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: clientId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: Response corresponding client data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        404:
+          description: Client not found
+    put:
+      operationId: updateClient
+      tags:
+        - clients
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: clientId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+      responses:
+        200:
+          description: Client updated
+        404:
+          description: Client not found
+    delete:
+      operationId: deleteClient
+      tags:
+        - clients
+      parameters:
+        - name: realm
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: clientId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        200:
+          description: Client deleted
+        404:
+          description: Client not found
 components:
   schemas:
     RealmItems:
@@ -89,6 +362,8 @@ components:
       type: object
       description: Realm role
       properties:
+        name:
+          type: string
         description:
           type: string
         enabled:
@@ -100,6 +375,8 @@ components:
       type: object
       description: OAuth2/OIDC client registration within the realm.
       properties:
+        clientId:
+          type: string
         clientSecret:
           type: string
           nullable: true
@@ -133,6 +410,8 @@ components:
       type: object
       description: User account within the realm.
       properties:
+        username:
+          type: string
         id:
           type: string
           description: Server-generated identifier (UUID).
@@ -171,5 +450,14 @@ components:
           format: password
           writeOnly: true
           description: Plaintext password (only used on create/update; never returned).
+        emailVerified:
+          type: boolean
+        groups:
+          type: array
+          description: Realm or application groups assigned to the user.
+          items:
+            type: string
+          uniqueItems: true
+          example: ["user", "editor"]
       required:
         - username

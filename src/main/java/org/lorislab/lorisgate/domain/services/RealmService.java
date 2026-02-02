@@ -17,6 +17,10 @@ public class RealmService {
         REALMS.put(realm.getName(), realm);
     }
 
+    public boolean deleteRealm(String realm) {
+        return REALMS.remove(realm) != null;
+    }
+
     public Realm getRealm(String realm) {
         return REALMS.get(realm);
     }

@@ -2,20 +2,56 @@ package org.lorislab.lorisgate.rs.admin.v1.mappers;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import org.lorislab.lorisgate.domain.model.Client;
 import org.lorislab.lorisgate.domain.model.Realm;
+import org.lorislab.lorisgate.domain.model.Role;
 import org.lorislab.lorisgate.domain.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import gen.org.lorislab.lorisgate.rs.admin.v1.model.ClientDTO;
-import gen.org.lorislab.lorisgate.rs.admin.v1.model.RealmDTO;
-import gen.org.lorislab.lorisgate.rs.admin.v1.model.RealmItemDTO;
-import gen.org.lorislab.lorisgate.rs.admin.v1.model.UserDTO;
+import gen.org.lorislab.lorisgate.rs.admin.v1.model.*;
 
 @Mapper
 public interface RealmMapper {
+
+    default Realm create(RealmDTO dto) {
+        var r = createItems(dto);
+        if (r == null) {
+            return null;
+        }
+        mapItems(dto.getRoles(), this::create, r::addRole);
+        mapItems(dto.getUsers(), this::create, r::addUser);
+        mapItems(dto.getClients(), this::create, r::addClient);
+        return r;
+    }
+
+    @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "users", ignore = true)
+    @Mapping(target = "clients", ignore = true)
+    Realm createItems(RealmDTO dto);
+
+    default <MODEL, DTO> void mapItems(Map<String, DTO> items, BiFunction<String, DTO, MODEL> mapper, Consumer<MODEL> fn) {
+        if (items == null) {
+            return;
+        }
+        items.entrySet().stream()
+                .map(e -> mapper.apply(e.getKey(), e.getValue()))
+                .forEach(fn);
+    }
+
+    Client create(String clientId, ClientDTO dto);
+
+    User create(String username, UserDTO dto);
+
+    Role create(String name, RoleDTO dto);
+
+    List<ClientDTO> mapClients(Collection<Client> items);
+
+    List<UserDTO> mapUsers(Collection<User> items);
 
     List<RealmItemDTO> mapItems(Collection<Realm> realms);
 
@@ -31,6 +67,7 @@ public interface RealmMapper {
     @Mapping(target = "removeRedirectUrisItem", ignore = true)
     ClientDTO map(Client client);
 
+    @Mapping(target = "removeGroupsItem", ignore = true)
     @Mapping(target = "removeRolesItem", ignore = true)
     UserDTO map(User user);
 }

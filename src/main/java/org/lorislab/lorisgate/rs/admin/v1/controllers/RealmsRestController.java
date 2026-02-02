@@ -23,6 +23,23 @@ public class RealmsRestController implements RealmsApi {
     RealmMapper mapper;
 
     @Override
+    public RestResponse<Void> createRealm(RealmDTO realmDTO) {
+        if (realmService.getRealm(realmDTO.getName()) != null) {
+            return RestResponse.status(RestResponse.Status.CONFLICT);
+        }
+        realmService.addRealm(mapper.create(realmDTO));
+        return RestResponse.status(RestResponse.Status.CREATED);
+    }
+
+    @Override
+    public RestResponse<Void> deleteRealm(String realm) {
+        if (realmService.deleteRealm(realm)) {
+            return RestResponse.ok();
+        }
+        return RestResponse.notFound();
+    }
+
+    @Override
     public RestResponse<RealmDTO> getRealm(String realm) {
         var item = realmService.getRealm(realm);
         if (item == null) {
@@ -34,5 +51,14 @@ public class RealmsRestController implements RealmsApi {
     @Override
     public RestResponse<List<RealmItemDTO>> getRealms() {
         return RestResponse.ok(mapper.mapItems(realmService.realms()));
+    }
+
+    @Override
+    public RestResponse<Void> updateRealm(String realm, RealmDTO realmDTO) {
+        if (realmService.getRealm(realmDTO.getName()) == null) {
+            return RestResponse.notFound();
+        }
+        realmService.addRealm(mapper.create(realmDTO));
+        return RestResponse.ok();
     }
 }

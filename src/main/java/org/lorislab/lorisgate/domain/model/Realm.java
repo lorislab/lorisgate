@@ -12,11 +12,11 @@ public class Realm {
 
     private boolean enabled;
 
-    private final Map<String, Role> roles = new HashMap<>();
+    private Map<String, Role> roles = new HashMap<>();
 
-    private final Map<String, Client> clients = new HashMap<>();
+    private Map<String, Client> clients = new HashMap<>();
 
-    private final Map<String, User> users = new HashMap<>();
+    private Map<String, User> users = new HashMap<>();
 
     private final Map<String, AuthorizationCode> codes = new HashMap<>();
 
@@ -113,7 +113,15 @@ public class Realm {
         return users;
     }
 
+    public boolean deleteUser(String username) {
+        return users.remove(username) != null;
+    }
+
     public Map<String, Client> getClients() {
         return clients;
+    }
+
+    public boolean deleteClient(String clientId) {
+        return clients.remove(clientId) != null;
     }
 }
