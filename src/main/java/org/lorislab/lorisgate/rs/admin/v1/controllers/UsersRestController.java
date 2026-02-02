@@ -1,7 +1,5 @@
 package org.lorislab.lorisgate.rs.admin.v1.controllers;
 
-import java.util.List;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -11,6 +9,7 @@ import org.lorislab.lorisgate.rs.admin.v1.mappers.RealmMapper;
 
 import gen.org.lorislab.lorisgate.rs.admin.v1.UsersApi;
 import gen.org.lorislab.lorisgate.rs.admin.v1.model.UserDTO;
+import gen.org.lorislab.lorisgate.rs.admin.v1.model.UserSearchResultDTO;
 
 @ApplicationScoped
 public class UsersRestController implements UsersApi {
@@ -61,12 +60,12 @@ public class UsersRestController implements UsersApi {
     }
 
     @Override
-    public RestResponse<List<UserDTO>> getUsers(String realm) {
+    public RestResponse<UserSearchResultDTO> getUsers(String realm) {
         var r = realmService.getRealm(realm);
         if (r == null) {
             return RestResponse.notFound();
         }
-        return RestResponse.ok(mapper.mapUsers(r.getUsers().values()));
+        return RestResponse.ok(mapper.mapResultUsers(r.getUsers().values()));
     }
 
     @Override
@@ -79,7 +78,7 @@ public class UsersRestController implements UsersApi {
         if (u == null) {
             return RestResponse.notFound();
         }
-        r.addUser(u);
+        r.addUser(mapper.create(username, userDTO));
         return RestResponse.ok();
     }
 }

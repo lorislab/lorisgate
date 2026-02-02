@@ -3,8 +3,6 @@ package org.lorislab.lorisgate.rs.admin.v1.controllers;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.UUID;
-
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Test;
 
@@ -15,19 +13,12 @@ import io.restassured.http.ContentType;
 
 @QuarkusTest
 @TestHTTPEndpoint(RealmsRestController.class)
-public class RealmsRestControllerTest {
+public class RealmsRestControllerTest extends AbstractAdminTest {
 
     @Test
     public void createRealmTest() {
 
-        var req = new RealmDTO().name("testCreate").displayName(UUID.randomUUID().toString()).enabled(true);
-
-        given()
-                .when().contentType(ContentType.JSON)
-                .body(req)
-                .post()
-                .then()
-                .statusCode(RestResponse.StatusCode.CREATED);
+        var req = createRealm("testCreate");
 
         given()
                 .when().contentType(ContentType.JSON)
@@ -57,14 +48,7 @@ public class RealmsRestControllerTest {
     @Test
     public void deleteRealmTest() {
 
-        var req = new RealmDTO().name("testDelete").displayName(UUID.randomUUID().toString()).enabled(true);
-
-        given()
-                .when().contentType(ContentType.JSON)
-                .body(req)
-                .post()
-                .then()
-                .statusCode(RestResponse.StatusCode.CREATED);
+        var req = createRealm("testDelete");
 
         given()
                 .when().contentType(ContentType.JSON)
@@ -82,14 +66,7 @@ public class RealmsRestControllerTest {
     @Test
     public void updateRealmTest() {
 
-        var req = new RealmDTO().name("testUpdate").displayName(UUID.randomUUID().toString()).enabled(true);
-
-        given()
-                .when().contentType(ContentType.JSON)
-                .body(req)
-                .post()
-                .then()
-                .statusCode(RestResponse.StatusCode.CREATED);
+        var req = createRealm("testUpdate");
 
         var result = given()
                 .when().contentType(ContentType.JSON)

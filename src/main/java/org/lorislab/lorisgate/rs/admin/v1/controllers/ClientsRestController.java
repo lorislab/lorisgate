@@ -1,7 +1,5 @@
 package org.lorislab.lorisgate.rs.admin.v1.controllers;
 
-import java.util.List;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -11,6 +9,7 @@ import org.lorislab.lorisgate.rs.admin.v1.mappers.RealmMapper;
 
 import gen.org.lorislab.lorisgate.rs.admin.v1.ClientsApi;
 import gen.org.lorislab.lorisgate.rs.admin.v1.model.ClientDTO;
+import gen.org.lorislab.lorisgate.rs.admin.v1.model.ClientSearchResultDTO;
 
 @ApplicationScoped
 public class ClientsRestController implements ClientsApi {
@@ -61,12 +60,12 @@ public class ClientsRestController implements ClientsApi {
     }
 
     @Override
-    public RestResponse<List<ClientDTO>> getClients(String realm) {
+    public RestResponse<ClientSearchResultDTO> getClients(String realm) {
         var r = realmService.getRealm(realm);
         if (r == null) {
             return RestResponse.notFound();
         }
-        return RestResponse.ok(mapper.mapClients(r.getClients().values()));
+        return RestResponse.ok(mapper.mapResultClients(r.getClients().values()));
     }
 
     @Override
@@ -75,6 +74,11 @@ public class ClientsRestController implements ClientsApi {
         if (r == null) {
             return RestResponse.notFound();
         }
-        return null;
+        var u = r.getClient(clientId);
+        if (u == null) {
+            return RestResponse.notFound();
+        }
+        r.addClient(mapper.create(clientId, clientDTO));
+        return RestResponse.status(RestResponse.Status.OK);
     }
 }

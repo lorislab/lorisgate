@@ -106,13 +106,11 @@ paths:
             type: string
       responses:
         200:
-          description: Response list of realm users
+          description: All users
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserSearchResult'
     post:
       operationId: createUser
       tags:
@@ -220,9 +218,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Client'
+                $ref: '#/components/schemas/ClientSearchResult'
     post:
       operationId: createClient
       tags:
@@ -373,6 +369,13 @@ components:
           description: Whether the role is enabled.
           default: true
           example: true
+    ClientSearchResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
     Client:
       type: object
       description: OAuth2/OIDC client registration within the realm.
@@ -408,6 +411,13 @@ components:
           uniqueItems: true
       required:
         - clientId
+    UserSearchResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
     User:
       type: object
       description: User account within the realm.

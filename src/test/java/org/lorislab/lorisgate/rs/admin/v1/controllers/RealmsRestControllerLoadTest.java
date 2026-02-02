@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.lorislab.lorisgate.AbstractTest;
 
 import gen.org.lorislab.lorisgate.rs.admin.v1.model.RealmSearchResultDTO;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -12,7 +13,7 @@ import io.restassured.http.ContentType;
 
 @QuarkusTest
 @TestHTTPEndpoint(RealmsRestController.class)
-public class RealmsRestControllerLoadTest {
+public class RealmsRestControllerLoadTest extends AbstractTest {
 
     @Test
     public void getAllRealmsTest() {

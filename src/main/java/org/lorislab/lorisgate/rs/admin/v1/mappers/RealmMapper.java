@@ -51,11 +51,23 @@ public interface RealmMapper {
 
     List<ClientDTO> mapClients(Collection<Client> items);
 
+    default ClientSearchResultDTO mapResultClients(Collection<Client> items) {
+        var r = new ClientSearchResultDTO();
+        r.setItems(mapClients(items));
+        return r;
+    }
+
     List<UserDTO> mapUsers(Collection<User> items);
 
-    default RealmSearchResultDTO mapResult(Collection<Realm> realms) {
+    default UserSearchResultDTO mapResultUsers(Collection<User> items) {
+        var r = new UserSearchResultDTO();
+        r.setItems(mapUsers(items));
+        return r;
+    }
+
+    default RealmSearchResultDTO mapResult(Collection<Realm> items) {
         var r = new RealmSearchResultDTO();
-        r.setItems(mapItems(realms));
+        r.setItems(mapItems(items));
         return r;
     }
 
