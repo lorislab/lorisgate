@@ -13,10 +13,10 @@ import io.restassured.http.ContentType;
 
 @QuarkusTest
 @TestHTTPEndpoint(RealmsRestController.class)
-public class RealmsRestControllerTest extends AbstractAdminTest {
+class RealmsRestControllerTest extends AbstractAdminTest {
 
     @Test
-    public void createRealmTest() {
+    void createRealmTest() {
 
         var req = createRealm("testCreate");
 
@@ -46,7 +46,7 @@ public class RealmsRestControllerTest extends AbstractAdminTest {
     }
 
     @Test
-    public void deleteRealmTest() {
+    void deleteRealmTest() {
 
         var req = createRealm("testDelete");
 
@@ -64,7 +64,7 @@ public class RealmsRestControllerTest extends AbstractAdminTest {
     }
 
     @Test
-    public void updateRealmTest() {
+    void updateRealmTest() {
 
         var req = createRealm("testUpdate");
 

@@ -42,25 +42,13 @@ public class OidcUserRestController implements UserApi {
         try {
             var claims = refreshTokenService.parse(issuerService.issuer(uriInfo, realm), token);
 
-            var dto = new UserInfoDTO().sub(claims.getSubject());
-            if (claims.hasClaim(ClaimNames.EMAIL_VERIFIED)) {
-                dto.setEmailVerified(claims.getClaimValue(ClaimNames.EMAIL_VERIFIED, Boolean.class));
-            }
-            if (claims.hasClaim(ClaimNames.NAME)) {
-                dto.setName(claims.getClaimValueAsString(ClaimNames.NAME));
-            }
-            if (claims.hasClaim(ClaimNames.PREFERRED_USERNAME)) {
-                dto.setPreferredUsername(claims.getClaimValueAsString(ClaimNames.PREFERRED_USERNAME));
-            }
-            if (claims.hasClaim(ClaimNames.GIVEN_NAME)) {
-                dto.setGivenName(claims.getClaimValueAsString(ClaimNames.GIVEN_NAME));
-            }
-            if (claims.hasClaim(ClaimNames.FAMILY_NAME)) {
-                dto.setFamilyName(claims.getClaimValueAsString(ClaimNames.FAMILY_NAME));
-            }
-            if (claims.hasClaim(ClaimNames.EMAIL)) {
-                dto.setEmail(claims.getClaimValueAsString(ClaimNames.EMAIL));
-            }
+            var dto = new UserInfoDTO().sub(claims.getSubject())
+                    .name(claims.getClaimValueAsString(ClaimNames.NAME))
+                    .preferredUsername(claims.getClaimValueAsString(ClaimNames.PREFERRED_USERNAME))
+                    .givenName(claims.getClaimValueAsString(ClaimNames.GIVEN_NAME))
+                    .familyName(claims.getClaimValueAsString(ClaimNames.FAMILY_NAME))
+                    .email(claims.getClaimValueAsString(ClaimNames.EMAIL))
+                    .emailVerified(Boolean.parseBoolean(claims.getClaimValueAsString(ClaimNames.EMAIL_VERIFIED)));
             return Response.ok(dto).build();
 
         } catch (Exception e) {

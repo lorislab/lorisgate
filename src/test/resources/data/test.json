@@ -43,7 +43,7 @@
       "name": "Alice Example",
       "givenName": "Alice",
       "familyName": "Example",
-      "email": "alice@example.com",
+      "email": "alice@localhost",
       "password": "alice"
     },
     "service-bot": {

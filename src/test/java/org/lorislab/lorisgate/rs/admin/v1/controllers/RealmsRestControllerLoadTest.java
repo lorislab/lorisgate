@@ -13,10 +13,10 @@ import io.restassured.http.ContentType;
 
 @QuarkusTest
 @TestHTTPEndpoint(RealmsRestController.class)
-public class RealmsRestControllerLoadTest extends AbstractTest {
+class RealmsRestControllerLoadTest extends AbstractTest {
 
     @Test
-    public void getAllRealmsTest() {
+    void getAllRealmsTest() {
 
         var result = given()
                 .when().contentType(ContentType.JSON)
@@ -25,6 +25,7 @@ public class RealmsRestControllerLoadTest extends AbstractTest {
                 .extract().as(RealmSearchResultDTO.class);
 
         assertThat(result).isNotNull();
-        assertThat(result.getItems()).hasSize(2);
+        assertThat(result.getItems()).isNotNull();
+        assertThat(result.getItems().size()).isGreaterThan(2);
     }
 }

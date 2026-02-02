@@ -6,6 +6,7 @@ LABEL org.opencontainers.image.description="LorisGate is a lightweight, high-per
 ENV LANGUAGE='en_US:en'
 ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 ENV JAVA_APP_JAR="/work/quarkus-run.jar"
+ENV JAVA_APP_DIR=/work
 
 WORKDIR /work/
 ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]

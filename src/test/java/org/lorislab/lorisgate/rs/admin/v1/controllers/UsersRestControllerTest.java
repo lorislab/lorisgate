@@ -14,10 +14,10 @@ import io.restassured.http.ContentType;
 
 @QuarkusTest
 @TestHTTPEndpoint(UsersRestController.class)
-public class UsersRestControllerTest extends AbstractAdminTest {
+class UsersRestControllerTest extends AbstractAdminTest {
 
     @Test
-    public void getUsersTest() throws Exception {
+    void getUsersTest() throws Exception {
 
         var realm = createRealm("testUserSearch");
 
@@ -61,7 +61,7 @@ public class UsersRestControllerTest extends AbstractAdminTest {
     }
 
     @Test
-    public void createUserTest() {
+    void createUserTest() {
         var realm = createRealm("testUserCreate");
 
         var req = new UserDTO().username("testUser1")
@@ -125,7 +125,7 @@ public class UsersRestControllerTest extends AbstractAdminTest {
     }
 
     @Test
-    public void updateUserTest() {
+    void updateUserTest() {
         var realm = createRealm("testUserUpdate");
 
         var req = new UserDTO().username("testUser1").name("testUser1").emailVerified(true).familyName("familyName1");
@@ -179,7 +179,7 @@ public class UsersRestControllerTest extends AbstractAdminTest {
     }
 
     @Test
-    public void deleteUserTest() {
+    void deleteUserTest() {
         var realm = createRealm("testUserDelete");
 
         var req = new UserDTO().username("testUserDelete1")
