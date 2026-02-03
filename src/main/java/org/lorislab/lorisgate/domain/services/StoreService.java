@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import org.lorislab.lorisgate.domain.mappers.StoreServiceMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

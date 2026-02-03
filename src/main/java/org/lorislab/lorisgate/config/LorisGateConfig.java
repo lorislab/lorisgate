@@ -25,6 +25,37 @@ public interface LorisGateConfig {
     StoreConfig store();
 
     /**
+     * Key configuration.
+     */
+    @WithName("key")
+    KeyConfig key();
+
+    /**
+     * Key configuration.
+     */
+    interface KeyConfig {
+
+        /**
+         * Key id.
+         */
+        @WithName("id")
+        @WithDefault("${quarkus.uuid}")
+        String id();
+
+        /**
+         * Private key file.
+         */
+        @WithName("private-key-file")
+        Optional<String> privateKeyFile();
+
+        /**
+         * Public key file.
+         */
+        @WithName("public-key-file")
+        Optional<String> publicKeyFile();
+    }
+
+    /**
      * OIDC configuration.
      */
     interface OidcConfig {

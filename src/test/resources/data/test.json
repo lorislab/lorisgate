@@ -52,6 +52,18 @@
       "email": "alice@localhost",
       "password": "alice"
     },
+    "disabled": {
+      "id": "disabled",
+      "username": "disabled",
+      "enabled": false,
+      "roles": ["user", "editor"],
+      "groups": ["user", "editor"],
+      "name": "Disabled Example",
+      "givenName": "disabled",
+      "familyName": "Example",
+      "email": "disabled@localhost",
+      "password": "disabled"
+    },
     "service-bot": {
       "id": "service-bot",
       "username": "service-bot",

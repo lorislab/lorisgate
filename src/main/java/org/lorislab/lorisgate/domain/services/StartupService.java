@@ -31,7 +31,8 @@ public class StartupService {
         try {
             storeService.importFiles(dir.get());
         } catch (Exception e) {
-            log.error("Error searching store directory '{}'.", dir, e);
+            log.error("Error searching store directory '{}'. Error: {}", dir, e.getMessage());
+            log.debug(e.getMessage(), e);
         }
     }
 

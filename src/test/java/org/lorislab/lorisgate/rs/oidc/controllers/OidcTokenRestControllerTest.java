@@ -29,6 +29,8 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
 
     private static final String CLIENT_ID = "app-backend";
 
+    private static final String CLIENT_ID_WEB = "web-portal";
+
     private static final String CLIENT_SECRET = "s3cr3t-value";
 
     @Test
@@ -114,7 +116,7 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
     }
 
     @Test
-    void testTokenWithBasicBadRequest() {
+    void testTokenWithBasicBadRequestMissingBasicAuthSeparator() {
         // missing :
         var basic = Base64.getEncoder().encodeToString((CLIENT_ID + CLIENT_SECRET).getBytes(StandardCharsets.UTF_8));
         given()
@@ -129,7 +131,12 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
 
+    }
+
+    @Test
+    void testTokenWithBasicBadRequestNoBasicPrefix() {
         // no Basic prefix
+        var basic = Base64.getEncoder().encodeToString((CLIENT_ID + CLIENT_SECRET).getBytes(StandardCharsets.UTF_8));
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .header("Authorization", "None " + basic)
@@ -140,7 +147,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .post()
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+    }
 
+    @Test
+    void testTokenWithBasicBadRequestNoClientId() {
         // no clientId
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -152,7 +162,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .post()
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+    }
 
+    @Test
+    void testTokenWithBasicBadRequestNoGrantType() {
         // no grant_type
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -165,6 +178,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
 
+    }
+
+    @Test
+    void testTokenWithBasicBadRequestNoRealm() {
         // wrong realm
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -178,7 +195,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .post()
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+    }
 
+    @Test
+    void testTokenWithBasicBadRequestWrongClientId() {
         // clientId does not exist
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -193,6 +213,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .then()
                 .statusCode(RestResponse.StatusCode.UNAUTHORIZED);
 
+    }
+
+    @Test
+    void testTokenWithBasicBadRequestWrongClientSecret() {
         // wrong client secret
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -207,6 +231,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .then()
                 .statusCode(RestResponse.StatusCode.UNAUTHORIZED);
 
+    }
+
+    @Test
+    void testTokenWithBasicBadRequestNullClientSecret() {
         // null client secret
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -222,7 +250,7 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
     }
 
     @Test
-    void testGrantPasswordBadRequest() {
+    void testGrantPasswordBadRequestNoUser() {
         // no username
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -236,6 +264,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
 
+    }
+
+    @Test
+    void testGrantPasswordBadRequestNoUserAndPassword() {
         // no username and password
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -248,6 +280,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
 
+    }
+
+    @Test
+    void testGrantPasswordBadRequestNoPassword() {
         // no password
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -261,6 +297,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
 
+    }
+
+    @Test
+    void testGrantPasswordBadRequestWrongUser() {
         // wrong user
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -275,6 +315,10 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .then()
                 .statusCode(RestResponse.StatusCode.UNAUTHORIZED);
 
+    }
+
+    @Test
+    void testGrantPasswordBadRequestWrongPassword() {
         // wrong password
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -308,9 +352,11 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getIdToken()).isNull();
         assertThat(response.getRefreshToken()).isNull();
+    }
 
-        // no scope
-        response = given()
+    @Test
+    void testGrantClientCredentialsNoScope() {
+        var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
                 .formParam("grant_type", GrantTypes.CLIENT_CREDENTIALS)
@@ -326,8 +372,11 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
         assertThat(response.getIdToken()).isNull();
         assertThat(response.getRefreshToken()).isNull();
 
-        // no openid scope
-        response = given()
+    }
+
+    @Test
+    void testGrantClientCredentialsNoOpenId() {
+        var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
                 .formParam("grant_type", GrantTypes.CLIENT_CREDENTIALS)
@@ -343,6 +392,20 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getIdToken()).isNull();
         assertThat(response.getRefreshToken()).isNull();
+    }
+
+    @Test
+    void testWrongGrantType() {
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", "wrong-grant-type")
+                .formParam("client_id", CLIENT_ID)
+                .formParam("client_secret", CLIENT_SECRET)
+                .formParam("scope", Scopes.OPENID)
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
     }
 
     @Test
@@ -366,9 +429,12 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getIdToken()).isNotNull();
         assertThat(response.getRefreshToken()).isNotNull();
+    }
 
-        // no scopes
-        response = given()
+    @Test
+    void testTokenAppUserNoScopes() {
+
+        var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
@@ -385,9 +451,11 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getIdToken()).isNull();
         assertThat(response.getRefreshToken()).isNotNull();
+    }
 
-        // no openid scope
-        response = given()
+    @Test
+    void testTokenAppUserNoOpenId() {
+        var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
@@ -405,5 +473,104 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getIdToken()).isNull();
         assertThat(response.getRefreshToken()).isNotNull();
+    }
+
+    @Test
+    void testGrantTypeRefreshTokenMissingRefreshToken() {
+        // missing refresh token
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", GrantTypes.REFRESH_TOKEN)
+                .formParam("client_id", CLIENT_ID)
+                .formParam("client_secret", CLIENT_SECRET)
+                .formParam("scope", Scopes.OPENID)
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+    }
+
+    @Test
+    void testGrantTypeRefreshTokenEmptyRefreshToken() {
+        // missing refresh token
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", GrantTypes.REFRESH_TOKEN)
+                .formParam("client_id", CLIENT_ID)
+                .formParam("client_secret", CLIENT_SECRET)
+                .formParam("scope", Scopes.OPENID)
+                .formParam("refresh_token", " ")
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+    }
+
+    @Test
+    void testGrantTypeRefreshTokenWrongClientId() {
+
+        var tokens = createUserTokens();
+
+        // wrong client id
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", GrantTypes.REFRESH_TOKEN)
+                .formParam("client_id", CLIENT_ID)
+                .formParam("client_secret", CLIENT_SECRET)
+                .formParam("scope", Scopes.OPENID)
+                .formParam("refresh_token", tokens.getRefreshToken())
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+    }
+
+    @Test
+    void testGrantTypeRefreshToken() {
+
+        var tokens = createUserTokens();
+
+        // wrong client id
+        var response = given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", GrantTypes.REFRESH_TOKEN)
+                .formParam("client_id", CLIENT_ID_WEB)
+                .formParam("scope", Scopes.OPENID)
+                .formParam("refresh_token", tokens.getRefreshToken())
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.OK)
+                .extract().as(TokenSuccessDTO.class);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getAccessToken()).isNotNull();
+        assertThat(response.getIdToken()).isNotNull();
+        assertThat(response.getRefreshToken()).isNotNull();
+    }
+
+    @Test
+    void testGrantTypeRefreshTokenNoUsername() {
+
+    }
+
+    @Test
+    void testGrantTypeRefreshTokenWrongUsername() {
+
+    }
+
+    @Test
+    void testGrantTypeRefreshTokenDisabledUsername() {
+
+    }
+
+    @Test
+    void testGrantTypeRefreshTokenParseException() {
+
+    }
+
+    @Test
+    void testGrantTypeRefreshTokenExpired() {
+
     }
 }

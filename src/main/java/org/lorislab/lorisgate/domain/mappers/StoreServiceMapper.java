@@ -1,4 +1,4 @@
-package org.lorislab.lorisgate.domain.services;
+package org.lorislab.lorisgate.domain.mappers;
 
 import org.lorislab.lorisgate.domain.model.Client;
 import org.lorislab.lorisgate.domain.model.Realm;

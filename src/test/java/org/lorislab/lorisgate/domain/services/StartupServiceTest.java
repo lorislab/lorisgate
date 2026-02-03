@@ -13,6 +13,7 @@ import io.quarkus.test.component.QuarkusComponentTest;
 import io.quarkus.test.component.TestConfigProperty;
 
 @QuarkusComponentTest
+@TestConfigProperty(key = "lorisgate.key.id", value = "12345")
 class StartupServiceTest {
 
     @Inject
