@@ -2,9 +2,6 @@ package org.lorislab.lorisgate.rs.admin.v1.mappers;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import org.lorislab.lorisgate.domain.model.Client;
 import org.lorislab.lorisgate.domain.model.Realm;
@@ -19,29 +16,20 @@ import gen.org.lorislab.lorisgate.rs.admin.v1.model.*;
 public interface RealmMapper {
 
     default Realm create(RealmDTO dto) {
-        var r = createItems(dto);
-        if (r == null) {
+        var realm = createItems(dto);
+        if (realm == null) {
             return null;
         }
-        mapItems(dto.getRoles(), this::create, r::addRole);
-        mapItems(dto.getUsers(), this::create, r::addUser);
-        mapItems(dto.getClients(), this::create, r::addClient);
-        return r;
+        dto.getRoles().forEach((key, value) -> realm.addRole(create(key, value)));
+        dto.getClients().forEach((key, value) -> realm.addClient(create(key, value)));
+        dto.getUsers().forEach((key, value) -> realm.addUser(create(key, value)));
+        return realm;
     }
 
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "users", ignore = true)
     @Mapping(target = "clients", ignore = true)
     Realm createItems(RealmDTO dto);
-
-    default <MODEL, DTO> void mapItems(Map<String, DTO> items, BiFunction<String, DTO, MODEL> mapper, Consumer<MODEL> fn) {
-        if (items == null) {
-            return;
-        }
-        items.entrySet().stream()
-                .map(e -> mapper.apply(e.getKey(), e.getValue()))
-                .forEach(fn);
-    }
 
     Client create(String clientId, ClientDTO dto);
 
