@@ -1,7 +1,6 @@
 package org.lorislab.lorisgate.rs.oidc.controllers;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.ws.rs.core.MediaType;
 
@@ -10,35 +9,70 @@ import org.junit.jupiter.api.Test;
 import org.lorislab.lorisgate.domain.model.GrantTypes;
 import org.lorislab.lorisgate.domain.model.Scopes;
 
-import gen.org.lorislab.lorisgate.rs.oidc.model.TokenSuccessDTO;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 @TestHTTPEndpoint(OidcTokenRestController.class)
-class OidcTokenRestControllerTest extends AbstractOidcTest {
+class OidcTokenRestControllerPasswordTest extends AbstractOidcTest {
 
     @Test
-    void testWrongGrantType() {
+    void testGrantPasswordBadRequestNoUser() {
+        // no username
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
-                .formParam("grant_type", "wrong-grant-type")
+                .formParam("password", PASSWORD)
+                .formParam("grant_type", GrantTypes.PASSWORD)
                 .formParam("client_id", CLIENT_ID)
                 .formParam("client_secret", CLIENT_SECRET)
                 .formParam("scope", Scopes.OPENID)
                 .post()
                 .then()
                 .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+
     }
 
     @Test
-    void testTokenAppUser() {
+    void testGrantPasswordBadRequestNoUserAndPassword() {
+        // no username and password
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("password", PASSWORD)
+                .formParam("client_id", CLIENT_ID)
+                .formParam("client_secret", CLIENT_SECRET)
+                .formParam("scope", Scopes.OPENID)
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
 
-        var response = given()
+    }
+
+    @Test
+    void testGrantPasswordBadRequestNoPassword() {
+        // no password
+        given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
+                .formParam("grant_type", GrantTypes.PASSWORD)
+                .formParam("client_id", CLIENT_ID)
+                .formParam("client_secret", CLIENT_SECRET)
+                .formParam("scope", Scopes.OPENID)
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+
+    }
+
+    @Test
+    void testGrantPasswordBadRequestWrongUser() {
+        // wrong user
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("username", "wrong-user")
                 .formParam("password", PASSWORD)
                 .formParam("grant_type", GrantTypes.PASSWORD)
                 .formParam("client_id", CLIENT_ID)
@@ -46,57 +80,25 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .formParam("scope", Scopes.OPENID)
                 .post()
                 .then()
-                .statusCode(RestResponse.StatusCode.OK)
-                .extract().as(TokenSuccessDTO.class);
+                .statusCode(RestResponse.StatusCode.UNAUTHORIZED);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isNotNull();
-        assertThat(response.getIdToken()).isNotNull();
-        assertThat(response.getRefreshToken()).isNotNull();
     }
 
     @Test
-    void testTokenAppUserNoScopes() {
-
-        var response = given()
+    void testGrantPasswordBadRequestWrongPassword() {
+        // wrong password
+        given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
-                .formParam("password", PASSWORD)
-                .formParam("grant_type", GrantTypes.PASSWORD)
+                .formParam("password", "wrong-password")
+                .formParam("grant_type", "password")
                 .formParam("client_id", CLIENT_ID)
                 .formParam("client_secret", CLIENT_SECRET)
+                .formParam("scope", Scopes.OPENID)
                 .post()
                 .then()
-                .statusCode(RestResponse.StatusCode.OK)
-                .extract().as(TokenSuccessDTO.class);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isNotNull();
-        assertThat(response.getIdToken()).isNull();
-        assertThat(response.getRefreshToken()).isNotNull();
-    }
-
-    @Test
-    void testTokenAppUserNoOpenId() {
-        var response = given()
-                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .pathParam("realm", REALM)
-                .formParam("username", USERNAME)
-                .formParam("password", PASSWORD)
-                .formParam("grant_type", GrantTypes.PASSWORD)
-                .formParam("client_id", CLIENT_ID)
-                .formParam("client_secret", CLIENT_SECRET)
-                .formParam("scope", Scopes.EMAIL)
-                .post()
-                .then()
-                .statusCode(RestResponse.StatusCode.OK)
-                .extract().as(TokenSuccessDTO.class);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isNotNull();
-        assertThat(response.getIdToken()).isNull();
-        assertThat(response.getRefreshToken()).isNotNull();
+                .statusCode(RestResponse.StatusCode.UNAUTHORIZED);
     }
 
 }

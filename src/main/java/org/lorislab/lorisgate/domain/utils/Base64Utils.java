@@ -4,6 +4,9 @@ import java.util.Base64;
 
 public class Base64Utils {
 
+    private Base64Utils() {
+    }
+
     public static String base64Url(byte[] b) {
         if (b.length > 1 && b[0] == 0) {
             byte[] c = new byte[b.length - 1];

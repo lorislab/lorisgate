@@ -9,10 +9,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import org.jose4j.jwt.JwtClaims;
-import org.jose4j.jwt.consumer.JwtConsumer;
-import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.lorislab.lorisgate.config.LorisGateConfig;
 import org.lorislab.lorisgate.domain.model.*;
+import org.lorislab.lorisgate.domain.utils.JwtHelper;
 
 import io.smallrye.jwt.build.Jwt;
 import io.smallrye.jwt.build.JwtClaimsBuilder;
@@ -28,15 +27,7 @@ public class TokenService {
 
     public JwtClaims parse(String issuer, String token) throws TokenValidationException {
         try {
-            JwtConsumer consumer = new JwtConsumerBuilder()
-                    .setRequireExpirationTime()
-                    .setAllowedClockSkewInSeconds(config.oidc().tokenSkew())
-                    .setExpectedIssuer(issuer)
-                    .setVerificationKey(keyManager.getPublicKey())
-                    .setSkipDefaultAudienceValidation()
-                    .build();
-
-            return consumer.processToClaims(token);
+            return JwtHelper.parse(issuer, token, keyManager.getPublicKey(), config.oidc().tokenSkew());
         } catch (Exception e) {
             throw new TokenValidationException(e);
         }
@@ -62,7 +53,7 @@ public class TokenService {
         if (nonce != null) {
             id.claim(ClaimNames.NONCE, nonce);
         }
-        return id.jws().keyId(keyManager.getKid()).sign(keyManager.getPrivateKey());
+        return JwtHelper.sign(id, keyManager.getKid(), keyManager.getPrivateKey());
     }
 
     public String createAccessToken(String issuer, User user, Client client, Set<String> scopes) {
@@ -95,7 +86,7 @@ public class TokenService {
             access.scope(scopes);
         }
 
-        return access.jws().keyId(keyManager.getKid()).sign(keyManager.getPrivateKey());
+        return JwtHelper.sign(access, keyManager.getKid(), keyManager.getPrivateKey());
     }
 
     public String createRefreshToken(String issuer, String clientId, String username, Set<String> scopes) {
@@ -114,7 +105,7 @@ public class TokenService {
             result.claim(ClaimNames.SCOPE, scopes);
         }
 
-        return result.jws().keyId(keyManager.getKid()).sign(keyManager.getPrivateKey());
+        return JwtHelper.sign(result, keyManager.getKid(), keyManager.getPrivateKey());
     }
 
     public String rotateRefreshToken(RefreshToken token) {

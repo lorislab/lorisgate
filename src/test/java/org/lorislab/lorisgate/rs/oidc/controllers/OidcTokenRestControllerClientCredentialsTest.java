@@ -16,31 +16,14 @@ import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 @TestHTTPEndpoint(OidcTokenRestController.class)
-class OidcTokenRestControllerTest extends AbstractOidcTest {
+class OidcTokenRestControllerClientCredentialsTest extends AbstractOidcTest {
 
     @Test
-    void testWrongGrantType() {
-        given()
-                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .pathParam("realm", REALM)
-                .formParam("grant_type", "wrong-grant-type")
-                .formParam("client_id", CLIENT_ID)
-                .formParam("client_secret", CLIENT_SECRET)
-                .formParam("scope", Scopes.OPENID)
-                .post()
-                .then()
-                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
-    }
-
-    @Test
-    void testTokenAppUser() {
-
+    void testGrantClientCredentials() {
         var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
-                .formParam("username", USERNAME)
-                .formParam("password", PASSWORD)
-                .formParam("grant_type", GrantTypes.PASSWORD)
+                .formParam("grant_type", GrantTypes.CLIENT_CREDENTIALS)
                 .formParam("client_id", CLIENT_ID)
                 .formParam("client_secret", CLIENT_SECRET)
                 .formParam("scope", Scopes.OPENID)
@@ -51,19 +34,16 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
 
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isNotNull();
-        assertThat(response.getIdToken()).isNotNull();
-        assertThat(response.getRefreshToken()).isNotNull();
+        assertThat(response.getIdToken()).isNull();
+        assertThat(response.getRefreshToken()).isNull();
     }
 
     @Test
-    void testTokenAppUserNoScopes() {
-
+    void testGrantClientCredentialsNoScope() {
         var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
-                .formParam("username", USERNAME)
-                .formParam("password", PASSWORD)
-                .formParam("grant_type", GrantTypes.PASSWORD)
+                .formParam("grant_type", GrantTypes.CLIENT_CREDENTIALS)
                 .formParam("client_id", CLIENT_ID)
                 .formParam("client_secret", CLIENT_SECRET)
                 .post()
@@ -74,17 +54,16 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getIdToken()).isNull();
-        assertThat(response.getRefreshToken()).isNotNull();
+        assertThat(response.getRefreshToken()).isNull();
+
     }
 
     @Test
-    void testTokenAppUserNoOpenId() {
+    void testGrantClientCredentialsNoOpenId() {
         var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
-                .formParam("username", USERNAME)
-                .formParam("password", PASSWORD)
-                .formParam("grant_type", GrantTypes.PASSWORD)
+                .formParam("grant_type", GrantTypes.CLIENT_CREDENTIALS)
                 .formParam("client_id", CLIENT_ID)
                 .formParam("client_secret", CLIENT_SECRET)
                 .formParam("scope", Scopes.EMAIL)
@@ -96,7 +75,7 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getIdToken()).isNull();
-        assertThat(response.getRefreshToken()).isNotNull();
+        assertThat(response.getRefreshToken()).isNull();
     }
 
 }

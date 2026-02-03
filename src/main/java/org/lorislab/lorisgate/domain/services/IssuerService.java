@@ -7,6 +7,8 @@ import jakarta.ws.rs.core.UriInfo;
 public class IssuerService {
 
     public String issuer(UriInfo uriInfo, String realm) {
-        return uriInfo.getBaseUri() + "realms/" + realm;
+        return "http://localhost:8080/realms/" + realm;
+
+        //        return uriInfo.getBaseUri() + "realms/" + realm;
     }
 }
