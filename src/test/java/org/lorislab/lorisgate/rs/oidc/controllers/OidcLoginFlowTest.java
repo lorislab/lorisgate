@@ -34,10 +34,6 @@ class OidcLoginFlowTest extends AbstractOidcTest {
     @Test
     void testLogin() throws IOException {
 
-        var realm = "test";
-        var username = "alice";
-        var password = "alice";
-        var clientId = "web-portal";
         var verifier = "123456";
         var code_challenge = generateChallenge(verifier);
         var homeUrl = SpecificationQuerier.query(given().basePath("/")).getURI();
@@ -45,9 +41,9 @@ class OidcLoginFlowTest extends AbstractOidcTest {
 
         var url = SpecificationQuerier.query(
                 given().basePath("/realms/{realm}/protocol/openid-connect/auth")
-                        .pathParam("realm", realm)
+                        .pathParam("realm", REALM)
                         .queryParam("response_type", "code")
-                        .queryParam("client_id", clientId)
+                        .queryParam("client_id", CLIENT_ID_WEB)
                         .queryParam("redirect_uri", homeUrl)
                         .queryParam("scope", "openid email")
                         .queryParam("state", "foo")
@@ -62,8 +58,8 @@ class OidcLoginFlowTest extends AbstractOidcTest {
 
             HtmlForm loginForm = page.getForms().getFirst();
 
-            loginForm.getInputByName("username").setValueAttribute(username);
-            loginForm.getInputByName("password").setValueAttribute(password);
+            loginForm.getInputByName("username").setValueAttribute(USERNAME);
+            loginForm.getInputByName("password").setValueAttribute(PASSWORD);
 
             page = loginForm.getButtonByName("login").click();
 
@@ -79,9 +75,9 @@ class OidcLoginFlowTest extends AbstractOidcTest {
 
         var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .pathParam("realm", realm)
+                .pathParam("realm", REALM)
                 .formParam("grant_type", "authorization_code")
-                .formParam("client_id", clientId)
+                .formParam("client_id", CLIENT_ID_WEB)
                 .formParam("code", code)
                 .formParam("redirect_uri", homeUrl)
                 .formParam("code_verifier", verifier)

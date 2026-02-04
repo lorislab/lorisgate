@@ -36,7 +36,13 @@
       "clientId": "test",
       "scopes": [],
       "roles": ["portal:user"],
-      "redirectUris": ["*"]
+      "redirectUris": ["http://localhost:8081/"]
+    },
+    "redirect-test": {
+      "clientId": "redirect-test",
+      "scopes": [],
+      "roles": ["portal:user"],
+      "redirectUris": ["http://localhost/callback/?foo=bar"]
     }
   },
   "users": {

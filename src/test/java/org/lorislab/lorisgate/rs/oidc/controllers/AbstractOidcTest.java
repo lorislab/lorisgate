@@ -26,6 +26,8 @@ class AbstractOidcTest extends AbstractTest {
 
     protected static final String USERNAME = "alice";
 
+    protected static final String USERNAME_DISABLED = "disabled";
+
     protected static final String PASSWORD = "alice";
 
     protected static final String CLIENT_ID = "app-backend";

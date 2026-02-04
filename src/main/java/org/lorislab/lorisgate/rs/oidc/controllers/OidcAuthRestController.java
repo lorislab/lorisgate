@@ -48,10 +48,6 @@ public class OidcAuthRestController implements AuthApi {
     public Response authorize(String realm, String responseType, String clientId, URI redirectUri, String scope, String state,
             String nonce, String codeChallenge, String codeChallengeMethod, String asUser) {
 
-        if (responseType == null || clientId == null || redirectUri == null) {
-            return bad(OAuthErrorDTO.ErrorEnum.INVALID_REQUEST);
-        }
-
         var store = realmService.getRealm(realm);
 
         if (store == null) {
@@ -109,13 +105,12 @@ public class OidcAuthRestController implements AuthApi {
             return Response.seeOther(tmp).build();
         }
 
-        if (responseType.contains(ResponseTypes.TOKEN) || responseType.contains(ResponseTypes.ID_TOKEN)) {
+        Set<String> types = ResponseTypes.toTypes(responseType);
+        if (types.contains(ResponseTypes.TOKEN) || types.contains(ResponseTypes.ID_TOKEN)) {
 
             String fragment = "";
 
             var issuer = issuerService.issuer(uriInfo, realm);
-
-            Set<String> types = ResponseTypes.toTypes(responseType);
 
             if (types.contains(ResponseTypes.TOKEN)) {
                 String at = tokenService.createAccessToken(issuer, user, client, scopes);
@@ -128,7 +123,7 @@ public class OidcAuthRestController implements AuthApi {
             }
 
             if (state != null) {
-                fragment += (fragment.isEmpty() ? "" : "&") + "state=" + enc(state);
+                fragment += "&state=" + enc(state);
             }
             return Response.seeOther(URI.create(redirectUri + "#" + fragment)).build();
         }

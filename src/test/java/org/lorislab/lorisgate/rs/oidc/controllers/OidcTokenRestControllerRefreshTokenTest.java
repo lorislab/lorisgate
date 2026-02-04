@@ -163,7 +163,7 @@ class OidcTokenRestControllerRefreshTokenTest extends AbstractOidcTest {
         var map = claims.getClaimsMap();
         var keyId = (String) map.get(ReservedClaimNames.JWT_ID);
 
-        var newToken = Jwt.claims(map).preferredUserName("disabled");
+        var newToken = Jwt.claims(map).preferredUserName(USERNAME_DISABLED);
 
         var refreshToken = JwtHelper.sign(newToken, keyId, keys.getPrivate());
 
