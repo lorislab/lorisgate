@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi10/ubi-minimal:10.1-1769677092 AS min
+FROM registry.access.redhat.com/ubi10/ubi-minimal:10.1-1770180557 AS min
 
 FROM registry.access.redhat.com/ubi10-micro:10.1-1769518576
 #quay.io/quarkus/ubi10-quarkus-micro-image:2.0-2026-02-01
