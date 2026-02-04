@@ -32,7 +32,7 @@ public class OidcUserRestController implements UserApi {
 
     @Override
     public Response getUserinfo(String realm) {
-        var auth = headers.getHeaderString("Authorization");
+        var auth = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
         if (auth == null || !auth.startsWith("Bearer ")) {
             return Response.status(Response.Status.UNAUTHORIZED)
                     .entity(new ErrorTokenDTO().error(ErrorTokenDTO.ErrorEnum.MISSING_BEARER_TOKEN)).build();

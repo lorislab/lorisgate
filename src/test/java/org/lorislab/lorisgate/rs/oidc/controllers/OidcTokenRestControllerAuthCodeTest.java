@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestResponse;
@@ -53,8 +54,8 @@ class OidcTokenRestControllerAuthCodeTest extends AbstractOidcTest {
                 .get("/protocol/openid-connect/auth")
                 .then()
                 .statusCode(RestResponse.StatusCode.SEE_OTHER)
-                .header("Location", org.hamcrest.Matchers.containsString("code="))
-                .extract().header("Location");
+                .header(HttpHeaders.LOCATION, org.hamcrest.Matchers.containsString("code="))
+                .extract().header(HttpHeaders.LOCATION);
 
         QueryStringDecoder decoder = new QueryStringDecoder(location);
         Map<String, List<String>> parameters = decoder.parameters();
