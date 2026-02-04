@@ -10,5 +10,5 @@ on:
 
 jobs:
   build:
-    uses: lorislab/ci-templates/quarkus/build.yml@main
+    uses: lorislab/ci-templates/.github/workflows/quarkus-build.yml@main
     secrets: inherit
