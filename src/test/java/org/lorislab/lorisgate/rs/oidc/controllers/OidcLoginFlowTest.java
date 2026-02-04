@@ -5,10 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +16,7 @@ import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Test;
+import org.lorislab.lorisgate.domain.utils.JwtHelper;
 
 import gen.org.lorislab.lorisgate.rs.oidc.model.TokenSuccessDTO;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -35,7 +32,7 @@ class OidcLoginFlowTest extends AbstractOidcTest {
     void testLogin() throws IOException {
 
         var verifier = "123456";
-        var code_challenge = generateChallenge(verifier);
+        var code_challenge = JwtHelper.generateChallenge(verifier);
         var homeUrl = SpecificationQuerier.query(given().basePath("/")).getURI();
         String code;
 
@@ -90,16 +87,6 @@ class OidcLoginFlowTest extends AbstractOidcTest {
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getIdToken()).isNotNull();
         assertThat(response.getRefreshToken()).isNotNull();
-    }
-
-    private static String generateChallenge(String verifier) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(verifier.getBytes(StandardCharsets.UTF_8));
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not found", e);
-        }
     }
 
     private WebClient createWebClient() {

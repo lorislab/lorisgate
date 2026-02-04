@@ -2,7 +2,6 @@ package org.lorislab.lorisgate.domain.model;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Realm {
 
@@ -44,16 +43,6 @@ public class Realm {
         this.enabled = enabled;
     }
 
-    public Set<String> filterRole(Set<String> data) {
-        if (data.isEmpty()) {
-            return Collections.emptySet();
-        }
-        return data.stream()
-                .filter(roles::containsKey)
-                .filter(role -> roles.get(role).isEnabled())
-                .collect(Collectors.toSet());
-    }
-
     public void saveAuthCode(AuthorizationCode code) {
         codes.put(code.getCode(), code);
     }
@@ -79,10 +68,6 @@ public class Realm {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public boolean hasUser(String username) {
-        return users.containsKey(username);
     }
 
     public User getUser(String username) {

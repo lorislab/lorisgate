@@ -89,7 +89,9 @@ public class TokenService {
         return JwtHelper.sign(access, keyManager.getKid(), keyManager.getPrivateKey());
     }
 
-    public String createRefreshToken(String issuer, String clientId, String username, Set<String> scopes) {
+    public String createRefreshToken(String issuer, User user, Client client, Set<String> scopes) {
+        var username = (user != null) ? user.getUsername() : null;
+
         var result = Jwt.claims()
                 .subject(UUID.randomUUID().toString())
                 .claim(ClaimNames.JTI, UUID.randomUUID().toString())
@@ -99,7 +101,7 @@ public class TokenService {
                 .audience(issuer)
                 .preferredUserName(username)
                 .claim(ClaimNames.TYP, TokenTypes.REFRESH)
-                .claim(ClaimNames.AZP, clientId);
+                .claim(ClaimNames.AZP, client.getClientId());
 
         if (!scopes.isEmpty()) {
             result.claim(ClaimNames.SCOPE, scopes);
@@ -108,8 +110,8 @@ public class TokenService {
         return JwtHelper.sign(result, keyManager.getKid(), keyManager.getPrivateKey());
     }
 
-    public String rotateRefreshToken(RefreshToken token) {
-        return createRefreshToken(token.getIssuer(), token.getClientId(), token.getUsername(), token.getScopes());
+    public String rotateRefreshToken(User user, Client client, RefreshToken token) {
+        return createRefreshToken(token.getIssuer(), user, client, token.getScopes());
     }
 
     public static class TokenValidationException extends RuntimeException {

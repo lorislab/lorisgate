@@ -92,7 +92,24 @@ class OidcTokenRestControllerPasswordTest extends AbstractOidcTest {
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
                 .formParam("password", "wrong-password")
-                .formParam("grant_type", "password")
+                .formParam("grant_type", GrantTypes.PASSWORD)
+                .formParam("client_id", CLIENT_ID)
+                .formParam("client_secret", CLIENT_SECRET)
+                .formParam("scope", Scopes.OPENID)
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.UNAUTHORIZED);
+    }
+
+    @Test
+    void testGrantPasswordBadRequestDisabledUser() {
+        // wrong password
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("username", "disabled")
+                .formParam("password", PASSWORD)
+                .formParam("grant_type", GrantTypes.PASSWORD)
                 .formParam("client_id", CLIENT_ID)
                 .formParam("client_secret", CLIENT_SECRET)
                 .formParam("scope", Scopes.OPENID)

@@ -1,6 +1,7 @@
 package org.lorislab.lorisgate.domain.utils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.*;
 import java.security.interfaces.RSAPrivateKey;
@@ -88,5 +89,19 @@ public class JwtHelper {
         }
         String base64 = pem.substring(start + header.length(), end).replaceAll("\\s", "");
         return Base64.getDecoder().decode(base64);
+    }
+
+    public static String generateChallenge(String verifier) {
+        return generateChallenge("SHA-256", verifier);
+    }
+
+    public static String generateChallenge(String algorithm, String verifier) {
+        try {
+            MessageDigest md = MessageDigest.getInstance(algorithm);
+            byte[] digest = md.digest(verifier.getBytes(StandardCharsets.US_ASCII));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("No SHA-256 algorithm found.", e);
+        }
     }
 }

@@ -1,7 +1,5 @@
 package org.lorislab.lorisgate.rs.oidc.controllers;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,6 +15,7 @@ import org.lorislab.lorisgate.domain.model.*;
 import org.lorislab.lorisgate.domain.services.IssuerService;
 import org.lorislab.lorisgate.domain.services.RealmService;
 import org.lorislab.lorisgate.domain.services.TokenService;
+import org.lorislab.lorisgate.domain.utils.JwtHelper;
 
 import gen.org.lorislab.lorisgate.rs.oidc.TokenApi;
 import gen.org.lorislab.lorisgate.rs.oidc.model.TokenSuccessDTO;
@@ -101,14 +100,14 @@ public class OidcTokenRestController implements TokenApi {
         }
 
         try {
-            var refreshToken1 = tokenService.parseRefreshToken(issuerService.issuer(uriInfo, store.getName()),
+            var rToken = tokenService.parseRefreshToken(issuerService.issuer(uriInfo, store.getName()),
                     refreshToken);
 
-            if (!client.getClientId().equals(refreshToken1.getClientId())) {
+            if (!client.getClientId().equals(rToken.getClientId())) {
                 return error(Response.Status.BAD_REQUEST, "invalid_grant", "refresh_token not for this client");
             }
 
-            if (refreshToken1.isExpired()) {
+            if (rToken.isExpired()) {
                 return error(Response.Status.BAD_REQUEST, "invalid_grant", "refresh_token expired");
             }
 
@@ -116,7 +115,7 @@ public class OidcTokenRestController implements TokenApi {
             tmp.retainAll(scope);
 
             User user = null;
-            var username = refreshToken1.getUsername();
+            var username = rToken.getUsername();
             if (username != null) {
                 user = store.getUser(username);
                 if (user == null || !user.isEnabled()) {
@@ -124,7 +123,7 @@ public class OidcTokenRestController implements TokenApi {
                 }
             }
 
-            return issueTokens(issuer, client, user, tmp, null, true, refreshToken1);
+            return issueTokens(issuer, client, user, tmp, null, true, rToken);
 
         } catch (Exception e) {
             return error(Response.Status.BAD_REQUEST, "invalid_grant", "Invalid refresh_token");
@@ -138,10 +137,10 @@ public class OidcTokenRestController implements TokenApi {
             return error(Response.Status.BAD_REQUEST, "invalid_request", "username and password required");
         }
 
-        if (!store.hasUser(username)) {
+        var user = store.getUser(username);
+        if (user == null || !user.isEnabled()) {
             return error(Response.Status.UNAUTHORIZED, "invalid_grant", "Invalid user");
         }
-        var user = store.getUser(username);
 
         if (!password.equals(user.getPassword())) {
             return error(Response.Status.UNAUTHORIZED, "invalid_grant", "Invalid credentials");
@@ -180,19 +179,13 @@ public class OidcTokenRestController implements TokenApi {
                 return error(Response.Status.BAD_REQUEST, "invalid_grant", "code_verifier required");
             }
 
-            String method = ac.getCodeChallengeMethod() == null ? "plain" : ac.getCodeChallengeMethod();
-            String derived;
+            String method = ac.getCodeChallengeMethod();
+            String derived = codeVerifier;
+
             if ("S256".equalsIgnoreCase(method)) {
-                try {
-                    MessageDigest md = MessageDigest.getInstance("SHA-256");
-                    byte[] digest = md.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
-                    derived = Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
-                } catch (Exception e) {
-                    return error(Response.Status.BAD_REQUEST, "server_error", e.getMessage());
-                }
-            } else {
-                derived = codeVerifier;
+                derived = JwtHelper.generateChallenge(codeVerifier);
             }
+
             if (!derived.equals(ac.getCodeChallenge())) {
                 return error(Response.Status.BAD_REQUEST, "invalid_grant", "PKCE verification failed");
             }
@@ -202,16 +195,11 @@ public class OidcTokenRestController implements TokenApi {
 
         store.consumeAuthCode(code);
 
-        if (!store.hasUser(ac.getUsername())) {
+        var user = store.getUser(ac.getUsername());
+        if (user == null || !user.isEnabled()) {
             return error(Response.Status.UNAUTHORIZED, "invalid_grant", "User not found");
         }
-        var user = store.getUser(ac.getUsername());
-
-        Set<String> scopes = new HashSet<>();
-        if (ac.getScopes() != null) {
-            scopes.addAll(ac.getScopes());
-        }
-        return issueTokens(issuer, client, user, scopes, ac.getNonce(), true, null);
+        return issueTokens(issuer, client, user, ac.getScopes(), ac.getNonce(), true, null);
     }
 
     private Response grandTypeClientCredentials(String issuer, Realm store, Client client, Set<String> scope) {
@@ -246,10 +234,9 @@ public class OidcTokenRestController implements TokenApi {
 
         if (issueRefresh) {
             if (fromRefresh != null) {
-                dto.setRefreshToken(tokenService.rotateRefreshToken(fromRefresh));
+                dto.setRefreshToken(tokenService.rotateRefreshToken(user, client, fromRefresh));
             } else {
-                dto.setRefreshToken(tokenService.createRefreshToken(issuer, client.getClientId(),
-                        user != null ? user.getUsername() : null, scopes));
+                dto.setRefreshToken(tokenService.createRefreshToken(issuer, user, client, scopes));
             }
             dto.setRefreshExpiresIn(config.oidc().refreshLifetime());
         }

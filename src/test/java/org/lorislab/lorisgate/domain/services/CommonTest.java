@@ -41,4 +41,13 @@ public class CommonTest {
         assertThatThrownBy(() -> JwtHelper.fromFiles("src/test/resources/keys/does_not_exists_key.pem", null))
                 .isInstanceOf(NoSuchFileException.class);
     }
+
+    @Test
+    void testJwtHelperGenerateChallenge() {
+
+        assertThatThrownBy(() -> JwtHelper.generateChallenge("NONE", "12345"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("No SHA-256 algorithm found.");
+
+    }
 }

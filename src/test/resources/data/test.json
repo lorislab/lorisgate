@@ -32,6 +32,21 @@
       "roles": ["portal:user"],
       "redirectUris": ["*"]
     },
+    "web-portal2": {
+      "clientId": "web-portal2",
+      "confidential": false,
+      "scopes": ["openid", "email"],
+      "roles": ["portal:user"],
+      "redirectUris": ["*"]
+    },
+    "web-portal3": {
+      "clientId": "web-portal3",
+      "clientSecret": "web-portal3",
+      "confidential": true,
+      "scopes": ["openid", "email"],
+      "roles": ["portal:user"],
+      "redirectUris": ["*"]
+    },
     "test": {
       "clientId": "test",
       "scopes": [],
@@ -57,6 +72,30 @@
       "familyName": "Example",
       "email": "alice@localhost",
       "password": "alice"
+    },
+    "auth-plain-disable": {
+      "id": "auth-plain-disable",
+      "username": "auth-plain-disable",
+      "enabled": true,
+      "roles": ["user", "editor"],
+      "groups": ["user", "editor"],
+      "name": "Alice Example",
+      "givenName": "Alice",
+      "familyName": "Example",
+      "email": "alice@localhost",
+      "password": "auth-plain-disable"
+    },
+    "auth-plain-delete": {
+      "id": "auth-plain-delete",
+      "username": "auth-plain-delete",
+      "enabled": true,
+      "roles": ["user", "editor"],
+      "groups": ["user", "editor"],
+      "name": "Alice Example",
+      "givenName": "Alice",
+      "familyName": "Example",
+      "email": "alice@localhost",
+      "password": "auth-plain-delete"
     },
     "disabled": {
       "id": "disabled",
