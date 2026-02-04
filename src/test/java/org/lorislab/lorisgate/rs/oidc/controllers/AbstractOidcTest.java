@@ -20,6 +20,8 @@ class AbstractOidcTest extends AbstractTest {
     @ConfigProperty(name = "%test.lorisgate.key.private-key-file")
     protected String privateKeyFile;
 
+    protected static final String ISSUER = "http://localhost:8080/realms/test";
+
     protected static final String REALM = "test";
 
     protected static final String USERNAME = "alice";

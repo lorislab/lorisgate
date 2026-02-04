@@ -99,23 +99,98 @@ class OidcTokenRestControllerRefreshTokenTest extends AbstractOidcTest {
     }
 
     @Test
-    void testGrantTypeRefreshTokenNoUsername() {
+    void testGrantTypeRefreshTokenNoUsername() throws Exception {
+        var tokens = createUserTokens();
 
+        var keys = JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
+
+        var claims = JwtHelper.parse(ISSUER, tokens.getRefreshToken(), keys.getPublic(), 3600);
+
+        var map = claims.getClaimsMap();
+        map.remove(ClaimNames.PREFERRED_USERNAME);
+        var keyId = (String) map.get(ReservedClaimNames.JWT_ID);
+
+        var newToken = Jwt.claims(map);
+
+        var refreshToken = JwtHelper.sign(newToken, keyId, keys.getPrivate());
+
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", GrantTypes.REFRESH_TOKEN)
+                .formParam("client_id", CLIENT_ID_WEB)
+                .formParam("scope", Scopes.OPENID)
+                .formParam("refresh_token", refreshToken)
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.OK);
     }
 
     @Test
-    void testGrantTypeRefreshTokenWrongUsername() {
+    void testGrantTypeRefreshTokenWrongUsername() throws Exception {
+        var tokens = createUserTokens();
 
+        var keys = JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
+
+        var claims = JwtHelper.parse(ISSUER, tokens.getRefreshToken(), keys.getPublic(), 3600);
+
+        var map = claims.getClaimsMap();
+        var keyId = (String) map.get(ReservedClaimNames.JWT_ID);
+
+        var newToken = Jwt.claims(map)
+                .preferredUserName("does-not-exists");
+        var refreshToken = JwtHelper.sign(newToken, keyId, keys.getPrivate());
+
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", GrantTypes.REFRESH_TOKEN)
+                .formParam("client_id", CLIENT_ID_WEB)
+                .formParam("scope", Scopes.OPENID)
+                .formParam("refresh_token", refreshToken)
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.UNAUTHORIZED);
     }
 
     @Test
-    void testGrantTypeRefreshTokenDisabledUsername() {
+    void testGrantTypeRefreshTokenDisabledUsername() throws Exception {
+        var tokens = createUserTokens();
 
+        var keys = JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
+        var claims = JwtHelper.parse(ISSUER, tokens.getRefreshToken(), keys.getPublic(), 3600);
+
+        var map = claims.getClaimsMap();
+        var keyId = (String) map.get(ReservedClaimNames.JWT_ID);
+
+        var newToken = Jwt.claims(map).preferredUserName("disabled");
+
+        var refreshToken = JwtHelper.sign(newToken, keyId, keys.getPrivate());
+
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", GrantTypes.REFRESH_TOKEN)
+                .formParam("client_id", CLIENT_ID_WEB)
+                .formParam("scope", Scopes.OPENID)
+                .formParam("refresh_token", refreshToken)
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.UNAUTHORIZED);
     }
 
     @Test
     void testGrantTypeRefreshTokenParseException() {
-
+        given()
+                .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .pathParam("realm", REALM)
+                .formParam("grant_type", GrantTypes.REFRESH_TOKEN)
+                .formParam("client_id", CLIENT_ID_WEB)
+                .formParam("scope", Scopes.OPENID)
+                .formParam("refresh_token", "parse-Refresh-token-exception")
+                .post()
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
     }
 
     @Test
@@ -123,23 +198,18 @@ class OidcTokenRestControllerRefreshTokenTest extends AbstractOidcTest {
 
         var tokens = createUserTokens();
 
-        var publicKey = JwtHelper.loadPublicKeyFromPem(publicKeyFile);
+        var keys = JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
 
-        var claims = JwtHelper.parse("http://localhost:8080/realms/test", tokens.getRefreshToken(), publicKey, 3600);
+        var claims = JwtHelper.parse(ISSUER, tokens.getRefreshToken(), keys.getPublic(), 3600);
 
         var map = claims.getClaimsMap();
-        map.put(ReservedClaimNames.EXPIRATION_TIME, 100);
-        map.put(ClaimNames.PREFERRED_USERNAME, "does-not-exists");
         var keyId = (String) map.get(ReservedClaimNames.JWT_ID);
 
-        System.out.println("### " + map);
-        var newToken = Jwt.claims(map);
+        var newToken = Jwt.claims(map)
+                .issuedAt(Instant.now().minusSeconds(15))
+                .expiresAt(Instant.now().minusSeconds(10));
 
-        Instant exp = Instant.now().minusSeconds(5);
-        newToken.expiresAt(exp.getEpochSecond());
-
-        var privateKey = JwtHelper.loadPrivateKeyFromPem(privateKeyFile);
-        var refreshToken = JwtHelper.sign(newToken, keyId, privateKey);
+        var refreshToken = JwtHelper.sign(newToken, keyId, keys.getPrivate());
 
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)

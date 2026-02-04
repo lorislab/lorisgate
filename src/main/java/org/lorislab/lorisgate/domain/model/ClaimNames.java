@@ -17,11 +17,11 @@ public interface ClaimNames {
 
     String CLIENT_ID = "client_id";
 
-    String PREFERRED_USERNAME = "preferred_username";
+    String PREFERRED_USERNAME = Claims.preferred_username.name();
 
-    String EMAIL = "email";
+    String EMAIL = Claims.email.name();
 
-    String FAMILY_NAME = "family_name";
+    String FAMILY_NAME = Claims.family_name.name();
 
     String GIVEN_NAME = "given_name";
 
