@@ -4,7 +4,6 @@ import static io.restassured.RestAssured.given;
 
 import jakarta.ws.rs.core.MediaType;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.lorislab.lorisgate.AbstractTest;
 import org.lorislab.lorisgate.domain.model.GrantTypes;
@@ -14,11 +13,9 @@ import gen.org.lorislab.lorisgate.rs.oidc.model.TokenSuccessDTO;
 
 class AbstractOidcTest extends AbstractTest {
 
-    @ConfigProperty(name = "%test.lorisgate.key.public-key-file")
-    protected String publicKeyFile;
+    protected static final String publicKeyFile = "src/test/resources/keys/test_public_key.pem";
 
-    @ConfigProperty(name = "%test.lorisgate.key.private-key-file")
-    protected String privateKeyFile;
+    protected static final String privateKeyFile = "src/test/resources/keys/test_private_key.pem";
 
     protected static final String ISSUER = "http://localhost:8080/realms/test";
 
