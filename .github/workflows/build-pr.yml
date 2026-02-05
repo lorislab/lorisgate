@@ -1,0 +1,9 @@
+name: Build PR
+
+on:
+  pull_request:
+
+jobs:
+  pr:
+    uses: lorislab/ci-templates/.github/workflows/quarkus-build-pr.yml@main
+    secrets: inherit

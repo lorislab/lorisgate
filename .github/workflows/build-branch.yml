@@ -1,0 +1,15 @@
+name: Build Branch
+
+on:
+  push:
+    branches:
+      - '**'
+      - '!main'
+      - '!fix/[0-9]+.[0-9]+.x'
+      - '![0-9]+.x'
+      - '!dependabot/**'
+
+jobs:
+  branch:
+    uses: lorislab/ci-templates/.github/workflows/quarkus-build-branch.yml@main
+    secrets: inherit

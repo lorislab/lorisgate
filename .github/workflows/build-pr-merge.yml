@@ -1,0 +1,9 @@
+name: Merge PR
+
+on:
+  pull_request_target:
+
+jobs:
+  pr:
+    uses: lorislab/ci-templates/.github/workflows/quarkus-build-pr-merge.yml@main
+    secrets: inherit
