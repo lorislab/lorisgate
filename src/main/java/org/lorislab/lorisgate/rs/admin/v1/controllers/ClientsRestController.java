@@ -12,6 +12,7 @@ import gen.org.lorislab.lorisgate.rs.admin.v1.model.ClientDTO;
 import gen.org.lorislab.lorisgate.rs.admin.v1.model.ClientSearchResultDTO;
 
 @ApplicationScoped
+@SuppressWarnings("java:S6813")
 public class ClientsRestController implements ClientsApi {
 
     @Inject

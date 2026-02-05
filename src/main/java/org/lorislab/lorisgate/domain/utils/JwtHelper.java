@@ -84,7 +84,9 @@ public class JwtHelper {
         int start = pem.indexOf(header);
         int end = pem.indexOf(footer);
         if (start < 0 || end < 0) {
-            log.error("Invalid {} key PEM format in file: {}", header.split(" ")[1], filePath);
+            if (log.isErrorEnabled()) {
+                log.error("Invalid {} key PEM format in file: {}", header.split(" ")[1], filePath);
+            }
             throw new RuntimeException("Invalid key PEM format");
         }
         String base64 = pem.substring(start + header.length(), end).replaceAll("\\s", "");

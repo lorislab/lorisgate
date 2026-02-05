@@ -102,7 +102,7 @@ class OidcTokenRestControllerRefreshTokenTest extends AbstractOidcTest {
     void testGrantTypeRefreshTokenNoUsername() throws Exception {
         var tokens = createUserTokens();
 
-        var keys = JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
+        var keys = JwtHelper.fromFiles(PRIVATE_KEY_FILE, PUBLIC_KEY_FILE);
 
         var claims = JwtHelper.parse(ISSUER, tokens.getRefreshToken(), keys.getPublic(), 3600);
 
@@ -130,7 +130,7 @@ class OidcTokenRestControllerRefreshTokenTest extends AbstractOidcTest {
     void testGrantTypeRefreshTokenWrongUsername() throws Exception {
         var tokens = createUserTokens();
 
-        var keys = JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
+        var keys = JwtHelper.fromFiles(PRIVATE_KEY_FILE, PUBLIC_KEY_FILE);
 
         var claims = JwtHelper.parse(ISSUER, tokens.getRefreshToken(), keys.getPublic(), 3600);
 
@@ -157,7 +157,7 @@ class OidcTokenRestControllerRefreshTokenTest extends AbstractOidcTest {
     void testGrantTypeRefreshTokenDisabledUsername() throws Exception {
         var tokens = createUserTokens();
 
-        var keys = JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
+        var keys = JwtHelper.fromFiles(PRIVATE_KEY_FILE, PUBLIC_KEY_FILE);
         var claims = JwtHelper.parse(ISSUER, tokens.getRefreshToken(), keys.getPublic(), 3600);
 
         var map = claims.getClaimsMap();
@@ -198,7 +198,7 @@ class OidcTokenRestControllerRefreshTokenTest extends AbstractOidcTest {
 
         var tokens = createUserTokens();
 
-        var keys = JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
+        var keys = JwtHelper.fromFiles(PRIVATE_KEY_FILE, PUBLIC_KEY_FILE);
 
         var claims = JwtHelper.parse(ISSUER, tokens.getRefreshToken(), keys.getPublic(), 3600);
 

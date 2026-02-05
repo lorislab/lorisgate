@@ -17,7 +17,7 @@ import io.restassured.http.ContentType;
 class ClientsRestControllerTest extends AbstractAdminTest {
 
     @Test
-    void getClientsTest() throws Exception {
+    void getClientsTest() {
 
         var realm = createRealm("testClientsSearch");
 

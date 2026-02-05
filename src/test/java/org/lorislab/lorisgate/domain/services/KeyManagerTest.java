@@ -47,12 +47,12 @@ class KeyManagerTest {
 
     @Test
     void testWrongKeys() {
-        assertThatThrownBy(() -> keyManager.loadKeyPair("src/test/resources/keys/test_wrong_key_1.pem", null))
+        assertThatThrownBy(() -> keyManager.loadKeyPair("src/test/resources/keys/test_wrong_1.example", null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Load private and public key from file. Error: Invalid key PEM format");
-        assertThatThrownBy(() -> keyManager.loadKeyPair("src/test/resources/keys/test_wrong_key_2.pem", null))
+        assertThatThrownBy(() -> keyManager.loadKeyPair("src/test/resources/keys/test_wrong_2.example", null))
                 .isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> keyManager.loadKeyPair("src/test/resources/keys/test_wrong_key_3.pem", null))
+        assertThatThrownBy(() -> keyManager.loadKeyPair("src/test/resources/keys/test_wrong_3.example", null))
                 .isInstanceOf(RuntimeException.class);
         assertThatThrownBy(() -> keyManager.loadKeyPair("src/test/resources/keys/does_not_exists_key.pem", null))
                 .isInstanceOf(RuntimeException.class);

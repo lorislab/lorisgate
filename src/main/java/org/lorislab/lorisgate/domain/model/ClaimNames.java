@@ -23,7 +23,7 @@ public interface ClaimNames {
 
     String FAMILY_NAME = Claims.family_name.name();
 
-    String GIVEN_NAME = "given_name";
+    String GIVEN_NAME = Claims.given_name.name();
 
     String NAME = "name";
 

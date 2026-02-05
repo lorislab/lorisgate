@@ -57,7 +57,7 @@
 
         <!-- Jacoco/Sonar -->
         <sonar.cpd.exclusions>**/mapper/**,**/mappers/**,**/dtos/**,**/dto/**,**/gen/**</sonar.cpd.exclusions>
-        <sonar.coverage.exclusions>**/model*/**/*.*,**/resources/**/*.*,**/JaxRsActivator*,**/mapper/**,**/mappers/**,**/gen/**,**/dtos/**,**/dto/**</sonar.coverage.exclusions>
+        <sonar.coverage.exclusions>**/model*/**/*.*,**/resources/**/*.*,**/mapper/**,**/mappers/**,**/gen/**,**/dtos/**,**/dto/**,**/*$Error.class</sonar.coverage.exclusions>
     </properties>
 
     <dependencyManagement>

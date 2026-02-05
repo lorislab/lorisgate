@@ -10,7 +10,7 @@ import org.lorislab.lorisgate.AbstractTest;
 import gen.org.lorislab.lorisgate.rs.admin.v1.model.RealmDTO;
 import io.restassured.http.ContentType;
 
-class AbstractAdminTest extends AbstractTest {
+abstract class AbstractAdminTest extends AbstractTest {
 
     protected RealmDTO createRealm(String name) {
         return createRealm(new RealmDTO().name(name).displayName(UUID.randomUUID().toString()).enabled(true));

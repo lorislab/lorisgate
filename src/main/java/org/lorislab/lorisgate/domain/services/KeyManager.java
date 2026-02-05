@@ -15,6 +15,7 @@ import io.quarkus.runtime.Startup;
 
 @Startup
 @Singleton
+@SuppressWarnings("java:S6813")
 public class KeyManager {
 
     @Inject
@@ -27,8 +28,11 @@ public class KeyManager {
     void init() {
         var key = config.key();
         kid = key.id();
-        if (key.privateKeyFile().isPresent() && key.publicKeyFile().isPresent()) {
-            keyPair = loadKeyPair(key.privateKeyFile().get(), key.publicKeyFile().get());
+
+        var pr = key.privateKeyFile();
+        var pu = key.publicKeyFile();
+        if (pr.isPresent() && pu.isPresent()) {
+            keyPair = loadKeyPair(pr.get(), pu.get());
         } else {
             keyPair = generateKeyPair(JwtHelper.ALGORITHM);
         }
@@ -50,7 +54,7 @@ public class KeyManager {
         try {
             return JwtHelper.fromFiles(privateKeyFile, publicKeyFile);
         } catch (Exception ex) {
-            throw new RuntimeException("Load private and public key from file. Error: " + ex.getMessage(), ex);
+            throw new Error("Load private and public key from file. Error: " + ex.getMessage(), ex);
         }
     }
 
@@ -58,7 +62,14 @@ public class KeyManager {
         try {
             return JwtHelper.generateKeyPair(algorithm);
         } catch (Exception ex) {
-            throw new RuntimeException("Generate key pair error", ex);
+            throw new Error("Generate key pair error", ex);
+        }
+    }
+
+    static class Error extends RuntimeException {
+
+        Error(String message, Exception e) {
+            super(message, e);
         }
     }
 }

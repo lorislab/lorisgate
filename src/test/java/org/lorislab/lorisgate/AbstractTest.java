@@ -9,7 +9,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.restassured.config.RestAssuredConfig;
 
-public class AbstractTest {
+public abstract class AbstractTest {
 
     static {
         config = RestAssuredConfig.config().objectMapperConfig(

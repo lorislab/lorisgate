@@ -11,11 +11,11 @@ import org.lorislab.lorisgate.domain.model.Scopes;
 
 import gen.org.lorislab.lorisgate.rs.oidc.model.TokenSuccessDTO;
 
-class AbstractOidcTest extends AbstractTest {
+abstract class AbstractOidcTest extends AbstractTest {
 
-    protected static final String publicKeyFile = "src/test/resources/keys/test_public_key.pem";
+    protected static final String PUBLIC_KEY_FILE = "src/test/resources/keys/test_public.example";
 
-    protected static final String privateKeyFile = "src/test/resources/keys/test_private_key.pem";
+    protected static final String PRIVATE_KEY_FILE = "src/test/resources/keys/test_private.example";
 
     protected static final String ISSUER = "http://localhost:8080/realms/test";
 
@@ -34,18 +34,14 @@ class AbstractOidcTest extends AbstractTest {
     protected static final String CLIENT_SECRET = "s3cr3t-value";
 
     protected TokenSuccessDTO createUserTokens() {
-        return createUserTokens(REALM, USERNAME, PASSWORD, CLIENT_ID_WEB, Scopes.OPENID);
-    }
-
-    protected TokenSuccessDTO createUserTokens(String realm, String user, String password, String clientId, String scopes) {
         return given().basePath("/realms/{realm}/protocol/openid-connect/token")
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .pathParam("realm", realm)
-                .formParam("username", user)
-                .formParam("password", password)
+                .pathParam("realm", REALM)
+                .formParam("username", USERNAME)
+                .formParam("password", PASSWORD)
                 .formParam("grant_type", GrantTypes.PASSWORD)
-                .formParam("client_id", clientId)
-                .formParam("scope", scopes)
+                .formParam("client_id", CLIENT_ID_WEB)
+                .formParam("scope", Scopes.OPENID)
                 .post()
                 .then()
                 .statusCode(RestResponse.StatusCode.OK)
