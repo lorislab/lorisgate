@@ -1,0 +1,9 @@
+name: Create new build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: lorislab/ci-templates/.github/workflows/common-new-build.yml@main
+    secrets: inherit

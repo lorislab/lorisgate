@@ -1,0 +1,9 @@
+name: Build Release
+on:
+  push:
+    tags:
+      - '**'
+jobs:
+  release:
+    uses: lorislab/ci-templates/.github/workflows/quarkus-build-release.yml@main
+    secrets: inherit

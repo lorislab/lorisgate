@@ -1,0 +1,7 @@
+name: Create Release
+on:
+  workflow_dispatch:
+jobs:
+  release:
+    uses: lorislab/ci-templates/.github/workflows/common-create-release.yml@main
+    secrets: inherit
