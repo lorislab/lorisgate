@@ -84,10 +84,8 @@ public class JwtHelper {
         int start = pem.indexOf(header);
         int end = pem.indexOf(footer);
         if (start < 0 || end < 0) {
-            if (log.isErrorEnabled()) {
-                log.error("Invalid {} key PEM format in file: {}", header.split(" ")[1], filePath);
-            }
-            throw new RuntimeException("Invalid key PEM format");
+            log.error("Invalid {} key PEM format in file: {}", header.split(" ")[1], filePath);
+            throw new Error("Invalid key PEM format");
         }
         String base64 = pem.substring(start + header.length(), end).replaceAll("\\s", "");
         return Base64.getDecoder().decode(base64);
@@ -103,7 +101,18 @@ public class JwtHelper {
             byte[] digest = md.digest(verifier.getBytes(StandardCharsets.US_ASCII));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("No SHA-256 algorithm found.", e);
+            throw new Error("No SHA-256 algorithm found.", e);
+        }
+    }
+
+    static class Error extends RuntimeException {
+
+        Error(String message) {
+            super(message);
+        }
+
+        Error(String message, Throwable t) {
+            super(message, t);
         }
     }
 }
