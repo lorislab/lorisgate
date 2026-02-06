@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestResponse;
@@ -27,7 +28,7 @@ class OidcTokenRestControllerBasicTest extends AbstractOidcTest {
         var basic = Base64.getEncoder().encodeToString((CLIENT_ID + ":" + CLIENT_SECRET).getBytes(StandardCharsets.UTF_8));
         var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .header("Authorization", "Basic " + basic)
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + basic)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
                 .formParam("password", PASSWORD)
@@ -45,7 +46,7 @@ class OidcTokenRestControllerBasicTest extends AbstractOidcTest {
 
         response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .header("Authorization", "Basic " + basic)
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + basic)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
                 .formParam("password", PASSWORD)
@@ -64,7 +65,7 @@ class OidcTokenRestControllerBasicTest extends AbstractOidcTest {
 
         response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .header("Authorization", "Basic " + basic)
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + basic)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
                 .formParam("password", PASSWORD)
@@ -83,7 +84,7 @@ class OidcTokenRestControllerBasicTest extends AbstractOidcTest {
 
         response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .header("Authorization", "Basic " + basic)
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + basic)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
                 .formParam("password", PASSWORD)
@@ -109,7 +110,7 @@ class OidcTokenRestControllerBasicTest extends AbstractOidcTest {
         var basic = Base64.getEncoder().encodeToString((CLIENT_ID + CLIENT_SECRET).getBytes(StandardCharsets.UTF_8));
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .header("Authorization", "Basic " + basic)
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + basic)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
                 .formParam("password", PASSWORD)
@@ -127,7 +128,7 @@ class OidcTokenRestControllerBasicTest extends AbstractOidcTest {
         var basic = Base64.getEncoder().encodeToString((CLIENT_ID + CLIENT_SECRET).getBytes(StandardCharsets.UTF_8));
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .header("Authorization", "None " + basic)
+                .header(HttpHeaders.AUTHORIZATION, "None " + basic)
                 .pathParam("realm", REALM)
                 .formParam("username", USERNAME)
                 .formParam("password", PASSWORD)

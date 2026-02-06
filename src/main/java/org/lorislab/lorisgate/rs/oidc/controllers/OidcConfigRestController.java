@@ -13,6 +13,7 @@ import org.lorislab.lorisgate.domain.model.ResponseTypes;
 import org.lorislab.lorisgate.domain.model.Scopes;
 import org.lorislab.lorisgate.domain.services.IssuerService;
 import org.lorislab.lorisgate.domain.services.KeyManager;
+import org.lorislab.lorisgate.domain.services.RealmService;
 import org.lorislab.lorisgate.domain.utils.Base64Utils;
 
 import gen.org.lorislab.lorisgate.rs.oidc.ConfigApi;
@@ -32,8 +33,17 @@ public class OidcConfigRestController implements ConfigApi {
     @Inject
     IssuerService issuerService;
 
+    @Inject
+    RealmService realmService;
+
     @Override
     public Response getJwks(String realm) {
+
+        var store = realmService.getRealm(realm);
+        if (store == null) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
         RSAPublicKey pub = keyManager.getPublicKey();
         var kid = keyManager.getKid();
         var dto = new JwksDTO()
@@ -47,7 +57,12 @@ public class OidcConfigRestController implements ConfigApi {
     @Override
     public Response getOpenIdConfiguration(String realm) {
 
-        var base = issuerService.issuer(uriInfo, realm);
+        var store = realmService.getRealm(realm);
+        if (store == null) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        var base = issuerService.issuer(uriInfo, store);
 
         var result = new OpenIdConfigurationDTO()
                 .issuer(URI.create(base))

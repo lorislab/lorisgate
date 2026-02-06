@@ -20,7 +20,7 @@ class OidcConfigRestControllerTest extends AbstractOidcTest {
 
         var result = given()
                 .when()
-                .pathParam("realm", "test")
+                .pathParam("realm", REALM)
                 .get("/.well-known/openid-configuration")
                 .then()
                 .statusCode(RestResponse.StatusCode.OK)
@@ -31,11 +31,22 @@ class OidcConfigRestControllerTest extends AbstractOidcTest {
     }
 
     @Test
+    void testGetOidcConfigNoRealm() {
+
+        given()
+                .when()
+                .pathParam("realm", "does-not-exists")
+                .get("/.well-known/openid-configuration")
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+    }
+
+    @Test
     void testJwks() {
 
         var result = given()
                 .when()
-                .pathParam("realm", "test")
+                .pathParam("realm", REALM)
                 .get("/protocol/openid-connect/certs")
                 .then()
                 .statusCode(RestResponse.StatusCode.OK)
@@ -47,5 +58,16 @@ class OidcConfigRestControllerTest extends AbstractOidcTest {
         assertThat(key).isNotNull();
         assertThat(key.getKty()).isEqualTo("RSA");
         assertThat(key.getAlg()).isEqualTo("RS256");
+    }
+
+    @Test
+    void testJwksNoRealm() {
+
+        given()
+                .when()
+                .pathParam("realm", "does-not-exists")
+                .get("/protocol/openid-connect/certs")
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
     }
 }

@@ -13,6 +13,11 @@ import io.smallrye.config.WithName;
 public interface LorisGateConfig {
 
     /**
+     * Hostname.
+     */
+    Optional<String> hostname();
+
+    /**
      * OIDC configuration.
      */
     @WithName("oidc")

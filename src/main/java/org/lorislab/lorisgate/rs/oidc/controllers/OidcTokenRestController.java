@@ -76,7 +76,7 @@ public class OidcTokenRestController implements TokenApi {
             }
         }
 
-        var issuer = issuerService.issuer(uriInfo, store.getName());
+        var issuer = issuerService.issuer(uriInfo, store);
         var scopes = Scopes.toScopes(scope);
 
         return switch (grantType) {
@@ -100,7 +100,7 @@ public class OidcTokenRestController implements TokenApi {
         }
 
         try {
-            var rToken = tokenService.parseRefreshToken(issuerService.issuer(uriInfo, store.getName()),
+            var rToken = tokenService.parseRefreshToken(issuerService.issuer(uriInfo, store),
                     refreshToken);
 
             if (!client.getClientId().equals(rToken.getClientId())) {

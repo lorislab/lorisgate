@@ -3,6 +3,8 @@ package org.lorislab.lorisgate.rs.oidc.controllers;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.ws.rs.core.HttpHeaders;
+
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Test;
 
@@ -16,10 +18,37 @@ import io.quarkus.test.junit.QuarkusTest;
 class OidcUserRestControllerTest extends AbstractOidcTest {
 
     @Test
+    void testUserInfoWrongRealm() {
+
+        var tokens = createUserTokens();
+
+        given()
+                .when()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken())
+                .when()
+                .pathParam("realm", "does-not-exists")
+                .get()
+                .then()
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+    }
+
+    @Test
     void testUserInfo() {
 
         var error = given()
                 .when()
+                .pathParam("realm", REALM)
+                .get()
+                .then()
+                .statusCode(RestResponse.StatusCode.UNAUTHORIZED)
+                .extract().as(ErrorTokenDTO.class);
+
+        assertThat(error).isNotNull();
+        assertThat(error.getError()).isEqualTo(ErrorTokenDTO.ErrorEnum.MISSING_BEARER_TOKEN);
+
+        error = given()
+                .when()
+                .header(HttpHeaders.AUTHORIZATION, "None 1")
                 .pathParam("realm", "test")
                 .get()
                 .then()
@@ -31,20 +60,8 @@ class OidcUserRestControllerTest extends AbstractOidcTest {
 
         error = given()
                 .when()
-                .header("Authorization", "None 1")
-                .pathParam("realm", "test")
-                .get()
-                .then()
-                .statusCode(RestResponse.StatusCode.UNAUTHORIZED)
-                .extract().as(ErrorTokenDTO.class);
-
-        assertThat(error).isNotNull();
-        assertThat(error.getError()).isEqualTo(ErrorTokenDTO.ErrorEnum.MISSING_BEARER_TOKEN);
-
-        error = given()
-                .when()
-                .header("Authorization", "Bearer 12345")
-                .pathParam("realm", "test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer 12345")
+                .pathParam("realm", REALM)
                 .get()
                 .then()
                 .statusCode(RestResponse.StatusCode.UNAUTHORIZED)
@@ -57,8 +74,8 @@ class OidcUserRestControllerTest extends AbstractOidcTest {
 
         var result = given()
                 .when()
-                .header("Authorization", "Bearer " + tokens.getAccessToken())
-                .pathParam("realm", "test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken())
+                .pathParam("realm", REALM)
                 .get()
                 .then()
                 .statusCode(RestResponse.StatusCode.OK)

@@ -110,7 +110,7 @@ public class OidcAuthRestController implements AuthApi {
 
             String fragment = "";
 
-            var issuer = issuerService.issuer(uriInfo, realm);
+            var issuer = issuerService.issuer(uriInfo, store);
 
             if (types.contains(ResponseTypes.TOKEN)) {
                 String at = tokenService.createAccessToken(issuer, user, client, scopes);

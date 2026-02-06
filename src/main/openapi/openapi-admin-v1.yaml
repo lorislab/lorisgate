@@ -335,6 +335,9 @@ components:
         name:
           type: string
           description: Realm id/name identifier.
+        frontendUrl:
+          type: string
+          description: Optional URL for realm front-end.
         displayName:
           type: string
           description: Realm display name identifier.

@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.UriInfo;
 
 import org.lorislab.lorisgate.domain.model.ClaimNames;
 import org.lorislab.lorisgate.domain.services.IssuerService;
+import org.lorislab.lorisgate.domain.services.RealmService;
 import org.lorislab.lorisgate.domain.services.TokenService;
 
 import gen.org.lorislab.lorisgate.rs.oidc.UserApi;
@@ -30,6 +31,9 @@ public class OidcUserRestController implements UserApi {
     @Inject
     IssuerService issuerService;
 
+    @Inject
+    RealmService realmService;
+
     @Override
     public Response getUserinfo(String realm) {
         var auth = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
@@ -39,8 +43,13 @@ public class OidcUserRestController implements UserApi {
         }
         String token = auth.substring("Bearer ".length());
 
+        var store = realmService.getRealm(realm);
+        if (store == null) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
         try {
-            var claims = refreshTokenService.parse(issuerService.issuer(uriInfo, realm), token);
+            var claims = refreshTokenService.parse(issuerService.issuer(uriInfo, store), token);
 
             var dto = new UserInfoDTO().sub(claims.getSubject())
                     .name(claims.getClaimValueAsString(ClaimNames.NAME))
