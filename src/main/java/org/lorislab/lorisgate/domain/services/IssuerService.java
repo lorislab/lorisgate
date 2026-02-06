@@ -14,10 +14,10 @@ public class IssuerService {
     LorisGateConfig config;
 
     public String issuer(UriInfo uriInfo, Realm realm) {
-        var host = config.hostname().orElseGet(() -> uriInfo.getBaseUri().getHost());
+        var host = config.hostname().orElseGet(() -> uriInfo.getBaseUri().toString());
         if (realm.getFrontendUrl() != null) {
             host = realm.getFrontendUrl();
         }
-        return host + "/realms/" + realm.getName();
+        return host + "realms/" + realm.getName();
     }
 }

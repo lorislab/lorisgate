@@ -31,6 +31,21 @@ class OidcConfigRestControllerTest extends AbstractOidcTest {
     }
 
     @Test
+    void testGetOidcConfigMaster() {
+
+        var result = given()
+                .when()
+                .pathParam("realm", "master")
+                .get("/.well-known/openid-configuration")
+                .then()
+                .statusCode(RestResponse.StatusCode.OK)
+                .extract().as(OpenIdConfigurationDTO.class);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getIssuer()).hasPath("/realms/master");
+    }
+
+    @Test
     void testGetOidcConfigNoRealm() {
 
         given()
