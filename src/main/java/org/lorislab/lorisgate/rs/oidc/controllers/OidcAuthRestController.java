@@ -145,7 +145,7 @@ public class OidcAuthRestController implements AuthApi {
         var store = realmService.getRealm(realm);
 
         if (store == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("realm not found").build();
+            return bad(OAuthErrorDTO.ErrorEnum.REALM_NOT_FOUND);
         }
 
         var user = store.getUser(username);

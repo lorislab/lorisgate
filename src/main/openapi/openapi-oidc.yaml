@@ -78,6 +78,12 @@ paths:
               description: Redirect target with appended `as_user` query parameter.
               schema:
                 type: string
+        400:
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthError'
         401:
           description: Invalid credentials
           content:
@@ -208,11 +214,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Jwks'
-        404:
-          description: Not found
-        500:
-          description: Server error
-
+        400:
+          description: Wrong request (e.g., invalid realm)
   /realms/{realm}/protocol/openid-connect/userinfo:
     get:
       summary: Get user info from JWT
@@ -239,6 +242,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserInfo'
+        400:
+          description: Wrong request (e.g., invalid realm)
         401:
           description: Missing or invalid bearer token.
           content:
@@ -265,11 +270,11 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/TokenRequest'
       responses:
-        '200':
+        200:
           $ref: '#/components/responses/OAuth2TokenSuccess'
-        '400':
+        400:
           $ref: '#/components/responses/OAuth2TokenError'
-        '401':
+        401:
           $ref: '#/components/responses/OAuth2TokenError'
 
   /realms/{realm}/.well-known/openid-configuration:
@@ -459,7 +464,7 @@ components:
             - invalid_grant
             - unsupported_grant_type
             - server_error
-        error_description:
+        description:
           type: string
           description: Human-readable description of the error.
           example: "username and password required"
@@ -859,4 +864,3 @@ components:
         error_description:
           type: string
           description: Human-readable error description (optional).
-

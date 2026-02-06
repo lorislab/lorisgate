@@ -2,7 +2,6 @@ package org.lorislab.lorisgate.rs.oidc.controllers;
 
 import java.util.Base64;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,6 +17,7 @@ import org.lorislab.lorisgate.domain.services.TokenService;
 import org.lorislab.lorisgate.domain.utils.JwtHelper;
 
 import gen.org.lorislab.lorisgate.rs.oidc.TokenApi;
+import gen.org.lorislab.lorisgate.rs.oidc.model.TokenErrorDTO;
 import gen.org.lorislab.lorisgate.rs.oidc.model.TokenSuccessDTO;
 
 @ApplicationScoped
@@ -57,22 +57,24 @@ public class OidcTokenRestController implements TokenApi {
         }
 
         if (clientId == null || grantType == null) {
-            return error(Response.Status.BAD_REQUEST, "invalid_request", "client_id and grant_type are required");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_REQUEST,
+                    "client_id and grant_type are required");
         }
 
         var store = realmService.getRealm(realm);
 
         if (store == null) {
-            return error(Response.Status.BAD_REQUEST, "invalid_request", "realm does not exist");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_REQUEST, "realm does not exist");
         }
 
         if (!store.hasClient(clientId)) {
-            return error(Response.Status.UNAUTHORIZED, "invalid_client", "Unknown client");
+            return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_CLIENT, "Unknown client");
         }
         var client = store.getClient(clientId);
         if (client.isConfidential()) {
             if (clientSecret == null || !clientSecret.equals(client.getClientSecret())) {
-                return error(Response.Status.UNAUTHORIZED, "invalid_client", "Invalid client credentials");
+                return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_CLIENT,
+                        "Invalid client credentials");
             }
         }
 
@@ -90,13 +92,13 @@ public class OidcTokenRestController implements TokenApi {
     }
 
     private Response grandTypeDefault() {
-        return error(Response.Status.BAD_REQUEST, "unsupported_grant_type",
+        return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.UNSUPPORTED_GRANT_TYPE,
                 "Supported: authorization_code, password, client_credentials");
     }
 
     private Response grantTypeRefreshToken(String issuer, Realm store, Client client, String refreshToken, Set<String> scope) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            return error(Response.Status.BAD_REQUEST, "invalid_request", "refresh_token required");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_REQUEST, "refresh_token required");
         }
 
         try {
@@ -104,11 +106,12 @@ public class OidcTokenRestController implements TokenApi {
                     refreshToken);
 
             if (!client.getClientId().equals(rToken.getClientId())) {
-                return error(Response.Status.BAD_REQUEST, "invalid_grant", "refresh_token not for this client");
+                return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT,
+                        "refresh_token not for this client");
             }
 
             if (rToken.isExpired()) {
-                return error(Response.Status.BAD_REQUEST, "invalid_grant", "refresh_token expired");
+                return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "refresh_token expired");
             }
 
             var tmp = new HashSet<>(client.getScopes());
@@ -119,14 +122,14 @@ public class OidcTokenRestController implements TokenApi {
             if (username != null) {
                 user = store.getUser(username);
                 if (user == null || !user.isEnabled()) {
-                    return error(Response.Status.UNAUTHORIZED, "invalid_grant", "Invalid user");
+                    return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid user");
                 }
             }
 
             return issueTokens(issuer, client, user, tmp, null, true, rToken);
 
         } catch (Exception e) {
-            return error(Response.Status.BAD_REQUEST, "invalid_grant", "Invalid refresh_token");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid refresh_token");
         }
     }
 
@@ -134,16 +137,16 @@ public class OidcTokenRestController implements TokenApi {
             String password) {
 
         if (username == null || password == null) {
-            return error(Response.Status.BAD_REQUEST, "invalid_request", "username and password required");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "username and password required");
         }
 
         var user = store.getUser(username);
         if (user == null || !user.isEnabled()) {
-            return error(Response.Status.UNAUTHORIZED, "invalid_grant", "Invalid user");
+            return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid user");
         }
 
         if (!password.equals(user.getPassword())) {
-            return error(Response.Status.UNAUTHORIZED, "invalid_grant", "Invalid credentials");
+            return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid credentials");
         }
 
         var tmp = new HashSet<>(client.getScopes());
@@ -156,27 +159,27 @@ public class OidcTokenRestController implements TokenApi {
             String codeVerifier) {
 
         if (code == null || redirectUri == null) {
-            return error(Response.Status.BAD_REQUEST, "invalid_request", "code and redirect_uri required");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "code and redirect_uri required");
         }
 
         var tmp = store.getAuthCode(code);
 
         if (tmp.isEmpty()) {
-            return error(Response.Status.BAD_REQUEST, "invalid_grant", "Invalid or expired code");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid or expired code");
         }
 
         var ac = tmp.get();
         if (!ac.getClientId().equals(client.getClientId())) {
-            return error(Response.Status.BAD_REQUEST, "invalid_grant", "Code not for this client");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Code not for this client");
         }
         if (!ac.getRedirectUri().equals(redirectUri)) {
-            return error(Response.Status.BAD_REQUEST, "invalid_grant", "redirect_uri mismatch");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "redirect_uri mismatch");
         }
 
         if (ac.getCodeChallenge() != null) {
 
             if (codeVerifier == null || codeVerifier.isBlank()) {
-                return error(Response.Status.BAD_REQUEST, "invalid_grant", "code_verifier required");
+                return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "code_verifier required");
             }
 
             String method = ac.getCodeChallengeMethod();
@@ -187,17 +190,18 @@ public class OidcTokenRestController implements TokenApi {
             }
 
             if (!derived.equals(ac.getCodeChallenge())) {
-                return error(Response.Status.BAD_REQUEST, "invalid_grant", "PKCE verification failed");
+                return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "PKCE verification failed");
             }
         } else if (!client.isConfidential()) {
-            return error(Response.Status.BAD_REQUEST, "invalid_grant", "PKCE required for public clients");
+            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT,
+                    "PKCE required for public clients");
         }
 
         store.consumeAuthCode(code);
 
         var user = store.getUser(ac.getUsername());
         if (user == null || !user.isEnabled()) {
-            return error(Response.Status.UNAUTHORIZED, "invalid_grant", "User not found");
+            return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "User not found");
         }
         return issueTokens(issuer, client, user, ac.getScopes(), ac.getNonce(), true, null);
     }
@@ -210,8 +214,8 @@ public class OidcTokenRestController implements TokenApi {
         return issueTokens(issuer, client, null, tmp, null, false, null);
     }
 
-    private Response error(Response.Status s, String code, String desc) {
-        return Response.status(s).entity(Map.of("error", code, "error_description", desc)).build();
+    private Response error(Response.Status s, TokenErrorDTO.ErrorEnum code, String desc) {
+        return Response.status(s).entity(new TokenErrorDTO().error(code).description(desc)).build();
     }
 
     private Response issueTokens(String issuer, Client client, User user, Set<String> scopes, String nonce,
