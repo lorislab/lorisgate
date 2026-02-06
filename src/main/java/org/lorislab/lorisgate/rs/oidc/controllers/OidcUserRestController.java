@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
 import org.lorislab.lorisgate.domain.model.ClaimNames;
+import org.lorislab.lorisgate.domain.model.HttpAuth;
 import org.lorislab.lorisgate.domain.services.IssuerService;
 import org.lorislab.lorisgate.domain.services.RealmService;
 import org.lorislab.lorisgate.domain.services.TokenService;
@@ -37,11 +38,11 @@ public class OidcUserRestController implements UserApi {
     @Override
     public Response getUserinfo(String realm) {
         var auth = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
-        if (auth == null || !auth.startsWith("Bearer ")) {
+        if (auth == null || !auth.startsWith(HttpAuth.BEARER_PREFIX)) {
             return Response.status(Response.Status.UNAUTHORIZED)
                     .entity(new ErrorTokenDTO().error(ErrorTokenDTO.ErrorEnum.MISSING_BEARER_TOKEN)).build();
         }
-        String token = auth.substring("Bearer ".length());
+        String token = auth.substring(HttpAuth.BEARER_PREFIX_LENGTH);
 
         var store = realmService.getRealm(realm);
         if (store == null) {

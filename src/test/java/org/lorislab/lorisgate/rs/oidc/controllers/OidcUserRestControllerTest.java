@@ -7,6 +7,7 @@ import jakarta.ws.rs.core.HttpHeaders;
 
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Test;
+import org.lorislab.lorisgate.domain.model.HttpAuth;
 
 import gen.org.lorislab.lorisgate.rs.oidc.model.ErrorTokenDTO;
 import gen.org.lorislab.lorisgate.rs.oidc.model.UserInfoDTO;
@@ -24,7 +25,7 @@ class OidcUserRestControllerTest extends AbstractOidcTest {
 
         given()
                 .when()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, HttpAuth.BEARER_PREFIX + tokens.getAccessToken())
                 .when()
                 .pathParam("realm", "does-not-exists")
                 .get()
@@ -60,7 +61,7 @@ class OidcUserRestControllerTest extends AbstractOidcTest {
 
         error = given()
                 .when()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer 12345")
+                .header(HttpHeaders.AUTHORIZATION, HttpAuth.bearerValue("12345"))
                 .pathParam("realm", REALM)
                 .get()
                 .then()
@@ -74,7 +75,7 @@ class OidcUserRestControllerTest extends AbstractOidcTest {
 
         var result = given()
                 .when()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, HttpAuth.bearerValue(tokens.getAccessToken()))
                 .pathParam("realm", REALM)
                 .get()
                 .then()
