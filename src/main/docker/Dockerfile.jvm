@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/openjdk-25:1.24-2.1769595333
+FROM registry.access.redhat.com/ubi9/openjdk-25:1.24-2.1770285115
 
 LABEL org.opencontainers.image.source="https://github.com/lorislab/lorisgate"
 LABEL org.opencontainers.image.description="LorisGate is a lightweight, high-performance OIDC (OpenID Connect) and Identity Management (IDM) server designed for the modern web"
