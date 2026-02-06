@@ -4,4 +4,5 @@ on:
 jobs:
   release:
     uses: lorislab/ci-templates/.github/workflows/common-create-release.yml@main
-    secrets: inherit
+    secrets:
+      CI_PAT_PR: ${{ secrets.CI_PAT_PR }}

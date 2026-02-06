@@ -6,4 +6,3 @@ on:
 jobs:
   release:
     uses: lorislab/ci-templates/.github/workflows/quarkus-build-release.yml@main
-    secrets: inherit

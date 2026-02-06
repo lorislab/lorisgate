@@ -11,4 +11,5 @@ on:
 jobs:
   build:
     uses: lorislab/ci-templates/.github/workflows/quarkus-build.yml@main
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
