@@ -6,15 +6,17 @@ import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
+import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.lorislab.lorisgate.config.LorisGateConfig;
 import org.lorislab.lorisgate.domain.model.*;
 import org.lorislab.lorisgate.domain.services.IssuerService;
 import org.lorislab.lorisgate.domain.services.RealmService;
 import org.lorislab.lorisgate.domain.services.TokenService;
 import org.lorislab.lorisgate.domain.utils.JwtHelper;
+import org.lorislab.lorisgate.rs.oidc.exceptions.RestException;
 
 import gen.org.lorislab.lorisgate.rs.oidc.TokenApi;
 import gen.org.lorislab.lorisgate.rs.oidc.model.TokenErrorDTO;
@@ -39,7 +41,8 @@ public class OidcTokenRestController implements TokenApi {
     IssuerService issuerService;
 
     @Override
-    public Response getToken(String realm, String grantType, String clientId, String authorization, String clientSecret,
+    public RestResponse<TokenSuccessDTO> getToken(String realm, String grantType, String clientId, String authorization,
+            String clientSecret,
             String username, String password, String scope, String code, String redirectUri, String codeVerifier,
             String refreshToken) {
 
@@ -57,23 +60,23 @@ public class OidcTokenRestController implements TokenApi {
         }
 
         if (clientId == null || grantType == null) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_REQUEST,
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_REQUEST,
                     "client_id and grant_type are required");
         }
 
         var store = realmService.getRealm(realm);
 
         if (store == null) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_REQUEST, "realm does not exist");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_REQUEST, "realm does not exist");
         }
 
         if (!store.hasClient(clientId)) {
-            return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_CLIENT, "Unknown client");
+            throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_CLIENT, "Unknown client");
         }
         var client = store.getClient(clientId);
         if (client.isConfidential()) {
             if (clientSecret == null || !clientSecret.equals(client.getClientSecret())) {
-                return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_CLIENT,
+                throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_CLIENT,
                         "Invalid client credentials");
             }
         }
@@ -87,18 +90,15 @@ public class OidcTokenRestController implements TokenApi {
             case GrantTypes.AUTHORIZATION_CODE ->
                 grandTypeAuthorizationCode(issuer, store, client, code, redirectUri, codeVerifier);
             case GrantTypes.REFRESH_TOKEN -> grantTypeRefreshToken(issuer, store, client, refreshToken, scopes);
-            default -> grandTypeDefault();
+            default -> throw RestException.badRequest(TokenErrorDTO.ErrorEnum.UNSUPPORTED_GRANT_TYPE,
+                    "Supported: authorization_code, password, client_credentials");
         };
     }
 
-    private Response grandTypeDefault() {
-        return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.UNSUPPORTED_GRANT_TYPE,
-                "Supported: authorization_code, password, client_credentials");
-    }
-
-    private Response grantTypeRefreshToken(String issuer, Realm store, Client client, String refreshToken, Set<String> scope) {
+    private RestResponse<TokenSuccessDTO> grantTypeRefreshToken(String issuer, Realm store, Client client, String refreshToken,
+            Set<String> scope) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_REQUEST, "refresh_token required");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_REQUEST, "refresh_token required");
         }
 
         try {
@@ -106,12 +106,12 @@ public class OidcTokenRestController implements TokenApi {
                     refreshToken);
 
             if (!client.getClientId().equals(rToken.getClientId())) {
-                return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT,
+                throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT,
                         "refresh_token not for this client");
             }
 
             if (rToken.isExpired()) {
-                return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "refresh_token expired");
+                throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "refresh_token expired");
             }
 
             var tmp = new HashSet<>(client.getScopes());
@@ -122,31 +122,34 @@ public class OidcTokenRestController implements TokenApi {
             if (username != null) {
                 user = store.getUser(username);
                 if (user == null || !user.isEnabled()) {
-                    return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid user");
+                    throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid user");
                 }
             }
 
             return issueTokens(issuer, client, user, tmp, null, true, rToken);
 
+        } catch (RestException e) {
+            throw e;
         } catch (Exception e) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid refresh_token");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid refresh_token");
         }
     }
 
-    private Response grandTypePassword(String issuer, Realm store, Client client, Set<String> scope, String username,
+    private RestResponse<TokenSuccessDTO> grandTypePassword(String issuer, Realm store, Client client, Set<String> scope,
+            String username,
             String password) {
 
         if (username == null || password == null) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "username and password required");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "username and password required");
         }
 
         var user = store.getUser(username);
         if (user == null || !user.isEnabled()) {
-            return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid user");
+            throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid user");
         }
 
         if (!password.equals(user.getPassword())) {
-            return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid credentials");
+            throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid credentials");
         }
 
         var tmp = new HashSet<>(client.getScopes());
@@ -155,31 +158,32 @@ public class OidcTokenRestController implements TokenApi {
         return issueTokens(issuer, client, user, tmp, null, true, null);
     }
 
-    private Response grandTypeAuthorizationCode(String issuer, Realm store, Client client, String code, String redirectUri,
+    private RestResponse<TokenSuccessDTO> grandTypeAuthorizationCode(String issuer, Realm store, Client client, String code,
+            String redirectUri,
             String codeVerifier) {
 
         if (code == null || redirectUri == null) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "code and redirect_uri required");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "code and redirect_uri required");
         }
 
         var tmp = store.getAuthCode(code);
 
         if (tmp.isEmpty()) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid or expired code");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid or expired code");
         }
 
         var ac = tmp.get();
         if (!ac.getClientId().equals(client.getClientId())) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Code not for this client");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Code not for this client");
         }
         if (!ac.getRedirectUri().equals(redirectUri)) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "redirect_uri mismatch");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "redirect_uri mismatch");
         }
 
         if (ac.getCodeChallenge() != null) {
 
             if (codeVerifier == null || codeVerifier.isBlank()) {
-                return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "code_verifier required");
+                throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "code_verifier required");
             }
 
             String method = ac.getCodeChallengeMethod();
@@ -190,23 +194,23 @@ public class OidcTokenRestController implements TokenApi {
             }
 
             if (!derived.equals(ac.getCodeChallenge())) {
-                return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "PKCE verification failed");
+                throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "PKCE verification failed");
             }
         } else if (!client.isConfidential()) {
-            return error(Response.Status.BAD_REQUEST, TokenErrorDTO.ErrorEnum.INVALID_GRANT,
-                    "PKCE required for public clients");
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "PKCE required for public clients");
         }
 
         store.consumeAuthCode(code);
 
         var user = store.getUser(ac.getUsername());
         if (user == null || !user.isEnabled()) {
-            return error(Response.Status.UNAUTHORIZED, TokenErrorDTO.ErrorEnum.INVALID_GRANT, "User not found");
+            throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "User not found");
         }
         return issueTokens(issuer, client, user, ac.getScopes(), ac.getNonce(), true, null);
     }
 
-    private Response grandTypeClientCredentials(String issuer, Realm store, Client client, Set<String> scope) {
+    private RestResponse<TokenSuccessDTO> grandTypeClientCredentials(String issuer, Realm store, Client client,
+            Set<String> scope) {
 
         var tmp = new HashSet<>(client.getScopes());
         tmp.retainAll(scope);
@@ -214,11 +218,7 @@ public class OidcTokenRestController implements TokenApi {
         return issueTokens(issuer, client, null, tmp, null, false, null);
     }
 
-    private Response error(Response.Status s, TokenErrorDTO.ErrorEnum code, String desc) {
-        return Response.status(s).entity(new TokenErrorDTO().error(code).description(desc)).build();
-    }
-
-    private Response issueTokens(String issuer, Client client, User user, Set<String> scopes, String nonce,
+    private RestResponse<TokenSuccessDTO> issueTokens(String issuer, Client client, User user, Set<String> scopes, String nonce,
             boolean issueRefresh, RefreshToken fromRefresh) {
 
         var accessToken = tokenService.createAccessToken(issuer, user, client, scopes);
@@ -244,7 +244,12 @@ public class OidcTokenRestController implements TokenApi {
             }
             dto.setRefreshExpiresIn(config.oidc().refreshLifetime());
         }
-        return Response.ok(dto).build();
+        return RestResponse.ok(dto);
     }
 
+    @ServerExceptionMapper
+    public RestResponse<TokenErrorDTO> mapException(RestException e) {
+        return RestResponse
+                .status(e.getStatus(), new TokenErrorDTO().error(e.getError()).description(e.getMessage()));
+    }
 }

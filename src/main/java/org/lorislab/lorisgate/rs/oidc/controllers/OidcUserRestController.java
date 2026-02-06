@@ -7,11 +7,14 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
+import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.lorislab.lorisgate.domain.model.ClaimNames;
 import org.lorislab.lorisgate.domain.model.HttpAuth;
 import org.lorislab.lorisgate.domain.services.IssuerService;
 import org.lorislab.lorisgate.domain.services.RealmService;
 import org.lorislab.lorisgate.domain.services.TokenService;
+import org.lorislab.lorisgate.rs.oidc.exceptions.RestException;
 
 import gen.org.lorislab.lorisgate.rs.oidc.UserApi;
 import gen.org.lorislab.lorisgate.rs.oidc.model.ErrorTokenDTO;
@@ -36,17 +39,16 @@ public class OidcUserRestController implements UserApi {
     RealmService realmService;
 
     @Override
-    public Response getUserinfo(String realm) {
+    public RestResponse<UserInfoDTO> getUserinfo(String realm) {
         var auth = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
         if (auth == null || !auth.startsWith(HttpAuth.BEARER_PREFIX)) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorTokenDTO().error(ErrorTokenDTO.ErrorEnum.MISSING_BEARER_TOKEN)).build();
+            throw RestException.unauthorized(ErrorTokenDTO.ErrorEnum.MISSING_BEARER_TOKEN);
         }
         String token = auth.substring(HttpAuth.BEARER_PREFIX_LENGTH);
 
         var store = realmService.getRealm(realm);
         if (store == null) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return RestResponse.status(Response.Status.BAD_REQUEST);
         }
 
         try {
@@ -59,12 +61,17 @@ public class OidcUserRestController implements UserApi {
                     .familyName(claims.getClaimValueAsString(ClaimNames.FAMILY_NAME))
                     .email(claims.getClaimValueAsString(ClaimNames.EMAIL))
                     .emailVerified(Boolean.parseBoolean(claims.getClaimValueAsString(ClaimNames.EMAIL_VERIFIED)));
-            return Response.ok(dto).build();
+            return RestResponse.ok(dto);
 
         } catch (Exception e) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorTokenDTO().error(ErrorTokenDTO.ErrorEnum.INVALID_TOKEN).errorDescription(e.getMessage()))
-                    .build();
+            throw RestException.unauthorized(ErrorTokenDTO.ErrorEnum.INVALID_TOKEN, e);
         }
     }
+
+    @ServerExceptionMapper
+    public RestResponse<ErrorTokenDTO> mapException(RestException e) {
+        return RestResponse
+                .status(e.getStatus(), new ErrorTokenDTO().error(e.getError()).errorDescription(e.getMessage()));
+    }
+
 }

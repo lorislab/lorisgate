@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.lorislab.lorisgate.domain.model.GrantTypes;
 import org.lorislab.lorisgate.domain.model.Scopes;
 
+import gen.org.lorislab.lorisgate.rs.oidc.model.TokenErrorDTO;
 import gen.org.lorislab.lorisgate.rs.oidc.model.TokenSuccessDTO;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -20,7 +21,7 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
 
     @Test
     void testWrongGrantType() {
-        given()
+        var response = given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .pathParam("realm", REALM)
                 .formParam("grant_type", "wrong-grant-type")
@@ -29,7 +30,11 @@ class OidcTokenRestControllerTest extends AbstractOidcTest {
                 .formParam("scope", Scopes.OPENID)
                 .post()
                 .then()
-                .statusCode(RestResponse.StatusCode.BAD_REQUEST);
+                .statusCode(RestResponse.StatusCode.BAD_REQUEST)
+                .extract().as(TokenErrorDTO.class);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getError()).isEqualTo(TokenErrorDTO.ErrorEnum.UNSUPPORTED_GRANT_TYPE);
     }
 
     @Test

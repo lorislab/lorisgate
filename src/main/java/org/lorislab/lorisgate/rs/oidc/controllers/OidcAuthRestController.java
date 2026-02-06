@@ -7,9 +7,10 @@ import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
+import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.lorislab.lorisgate.config.LorisGateConfig;
 import org.lorislab.lorisgate.domain.model.AuthorizationCode;
 import org.lorislab.lorisgate.domain.model.ResponseTypes;
@@ -17,6 +18,7 @@ import org.lorislab.lorisgate.domain.model.Scopes;
 import org.lorislab.lorisgate.domain.services.IssuerService;
 import org.lorislab.lorisgate.domain.services.RealmService;
 import org.lorislab.lorisgate.domain.services.TokenService;
+import org.lorislab.lorisgate.rs.oidc.exceptions.RestException;
 
 import gen.org.lorislab.lorisgate.rs.oidc.AuthApi;
 import gen.org.lorislab.lorisgate.rs.oidc.model.OAuthErrorDTO;
@@ -45,23 +47,24 @@ public class OidcAuthRestController implements AuthApi {
     Template login;
 
     @Override
-    public Response authorize(String realm, String responseType, String clientId, URI redirectUri, String scope, String state,
+    public RestResponse<Void> authorize(String realm, String responseType, String clientId, URI redirectUri, String scope,
+            String state,
             String nonce, String codeChallenge, String codeChallengeMethod, String asUser) {
 
         var store = realmService.getRealm(realm);
 
         if (store == null) {
-            return bad(OAuthErrorDTO.ErrorEnum.REALM_NOT_FOUND);
+            throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.REALM_NOT_FOUND);
         }
 
         var client = store.getClient(clientId);
         if (client == null) {
-            return bad(OAuthErrorDTO.ErrorEnum.UNAUTHORIZED_CLIENT);
+            throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.UNAUTHORIZED_CLIENT);
         }
 
         if (!client.getRedirectUris().contains("*")) {
             if (!client.getRedirectUris().contains(redirectUri.toString())) {
-                return bad(OAuthErrorDTO.ErrorEnum.INVALID_REQUEST);
+                throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.INVALID_REQUEST);
             }
         }
 
@@ -72,15 +75,14 @@ public class OidcAuthRestController implements AuthApi {
                     enc(responseType), enc(clientId), enc(redirectUri.toString()), enc(scope), enc(state), enc(nonce),
                     enc(codeChallenge),
                     enc(codeChallengeMethod));
-            return Response
+            return RestResponse
                     .seeOther(URI
-                            .create(String.format("/realms/%s/login-actions/authenticate?return_to=%s", realm, enc(returnTo))))
-                    .build();
+                            .create(String.format("/realms/%s/login-actions/authenticate?return_to=%s", realm, enc(returnTo))));
         }
 
         var user = store.getUser(asUser);
         if (user == null || !user.isEnabled()) {
-            return bad(OAuthErrorDTO.ErrorEnum.ACCESS_DENIED);
+            throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.ACCESS_DENIED);
         }
 
         Set<String> scopes = Scopes.toScopes(scope);
@@ -102,7 +104,7 @@ public class OidcAuthRestController implements AuthApi {
 
             var tmp = URI.create(redirectUri + (redirectUri.toString().contains("?") ? "&" : "?") + "code=" + ac.getCode()
                     + (state != null ? "&state=" + enc(state) : ""));
-            return Response.seeOther(tmp).build();
+            return RestResponse.seeOther(tmp);
         }
 
         Set<String> types = ResponseTypes.toTypes(responseType);
@@ -125,48 +127,50 @@ public class OidcAuthRestController implements AuthApi {
             if (state != null) {
                 fragment += "&state=" + enc(state);
             }
-            return Response.seeOther(URI.create(redirectUri + "#" + fragment)).build();
+            return RestResponse.seeOther(URI.create(redirectUri + "#" + fragment));
         }
 
-        return bad(OAuthErrorDTO.ErrorEnum.INVALID_REQUEST);
+        throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.INVALID_REQUEST);
     }
 
     private static String enc(String s) {
         return s == null ? "" : java.net.URLEncoder.encode(s, java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    private static Response bad(OAuthErrorDTO.ErrorEnum error) {
-        return Response.status(Response.Status.BAD_REQUEST).entity(new OAuthErrorDTO().error(error)).build();
-    }
-
     @Override
-    public Response doLogin(String realm, String username, String password, String returnTo) {
+    public RestResponse<Void> doLogin(String realm, String username, String password, String returnTo) {
 
         var store = realmService.getRealm(realm);
 
         if (store == null) {
-            return bad(OAuthErrorDTO.ErrorEnum.REALM_NOT_FOUND);
+            throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.REALM_NOT_FOUND);
         }
 
         var user = store.getUser(username);
         if (user == null || !user.isEnabled() || !user.getPassword().equals(password)) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid credentials").build();
+            return RestResponse.status(RestResponse.Status.UNAUTHORIZED);
         }
 
         if (returnTo == null) {
-            return Response.seeOther(URI.create("/")).build();
+            return RestResponse.seeOther(URI.create("/"));
         }
         String sep = returnTo.contains("?") ? "&" : "?";
-        return Response.seeOther(URI.create(returnTo + sep + "as_user=" + username)).build();
+        return RestResponse.seeOther(URI.create(returnTo + sep + "as_user=" + username));
     }
 
     @Override
-    public Response loginPage(String realm, String returnTo) {
-        return Response.ok(
-                login.data("container", new Container(realm, returnTo)).render()).build();
+    public RestResponse<String> loginPage(String realm, String returnTo) {
+        return RestResponse.ok(
+                login.data("container", new Container(realm, returnTo)).render());
     }
 
     @RegisterForReflection
     public record Container(String realm, String returnTo) {
+    }
+
+    @ServerExceptionMapper
+    public RestResponse<OAuthErrorDTO> mapException(RestException e) {
+        return RestResponse
+                .status(e.getStatus(), new OAuthErrorDTO().error(e.getError()).errorDescription(e.getMessage()));
     }
 }

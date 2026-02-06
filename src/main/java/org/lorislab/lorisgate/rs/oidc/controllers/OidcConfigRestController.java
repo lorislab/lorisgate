@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
+import org.jboss.resteasy.reactive.RestResponse;
 import org.lorislab.lorisgate.domain.model.GrantTypes;
 import org.lorislab.lorisgate.domain.model.ResponseTypes;
 import org.lorislab.lorisgate.domain.model.Scopes;
@@ -37,11 +38,11 @@ public class OidcConfigRestController implements ConfigApi {
     RealmService realmService;
 
     @Override
-    public Response getJwks(String realm) {
+    public RestResponse<JwksDTO> getJwks(String realm) {
 
         var store = realmService.getRealm(realm);
         if (store == null) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return RestResponse.status(Response.Status.BAD_REQUEST);
         }
 
         RSAPublicKey pub = keyManager.getPublicKey();
@@ -51,15 +52,15 @@ public class OidcConfigRestController implements ConfigApi {
                         .kty("RSA").use(JwkDTO.UseEnum.SIG).kid(kid).alg(SignatureAlgorithm.RS256.name())
                         .n(Base64Utils.base64Url(pub.getModulus().toByteArray()))
                         .e(Base64Utils.base64Url(pub.getPublicExponent().toByteArray())));
-        return Response.ok(dto).build();
+        return RestResponse.ok(dto);
     }
 
     @Override
-    public Response getOpenIdConfiguration(String realm) {
+    public RestResponse<OpenIdConfigurationDTO> getOpenIdConfiguration(String realm) {
 
         var store = realmService.getRealm(realm);
         if (store == null) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return RestResponse.status(Response.Status.BAD_REQUEST);
         }
 
         var base = issuerService.issuer(uriInfo, store);
@@ -82,7 +83,7 @@ public class OidcConfigRestController implements ConfigApi {
                 .tokenEndpointAuthMethodsSupported(
                         List.of(OpenIdConfigurationDTO.TokenEndpointAuthMethodsSupportedEnum.CLIENT_SECRET_BASIC,
                                 OpenIdConfigurationDTO.TokenEndpointAuthMethodsSupportedEnum.CLIENT_SECRET_POST));
-        return Response.ok(result).build();
+        return RestResponse.ok(result);
     }
 
 }
