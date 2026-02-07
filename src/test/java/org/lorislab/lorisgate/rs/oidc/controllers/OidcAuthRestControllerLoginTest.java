@@ -15,7 +15,7 @@ import io.quarkus.test.junit.QuarkusTest;
 class OidcAuthRestControllerLoginTest extends AbstractOidcTest {
 
     @Test
-    void testLoginPage() throws Exception {
+    void testLoginPage() {
         given()
                 .when()
                 .pathParam("realm", "test")

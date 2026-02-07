@@ -6,7 +6,7 @@ public class RestException extends RuntimeException {
 
     private final RestResponse.Status status;
 
-    private final Object error;
+    private final transient Object error;
 
     public static RestException unauthorized(Object error) {
         return new RestException(RestResponse.Status.UNAUTHORIZED, error);

@@ -312,7 +312,7 @@ class OidcAuthRestControllerTest extends AbstractOidcTest {
     }
 
     @Test
-    void testAuthNoClientId() throws Exception {
+    void testAuthNoClientId() {
         given()
                 .when().contentType(MediaType.APPLICATION_JSON)
                 .pathParam("realm", REALM)
@@ -329,7 +329,7 @@ class OidcAuthRestControllerTest extends AbstractOidcTest {
     }
 
     @Test
-    void testAuthNoRedirectUri() throws Exception {
+    void testAuthNoRedirectUri() {
         given()
                 .when().contentType(MediaType.APPLICATION_JSON)
                 .pathParam("realm", REALM)

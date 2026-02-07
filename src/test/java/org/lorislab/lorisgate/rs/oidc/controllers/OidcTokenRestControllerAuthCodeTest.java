@@ -194,9 +194,9 @@ class OidcTokenRestControllerAuthCodeTest extends AbstractOidcTest {
     void testCodeCodeChallengeS256() {
 
         var verifier = "123456";
-        var code_challenge = JwtHelper.generateChallenge(verifier);
+        var codeChallenge = JwtHelper.generateChallenge(verifier);
 
-        var code = createCode(code_challenge, CLIENT_ID_WEB, "S256");
+        var code = createCode(codeChallenge, CLIENT_ID_WEB, "S256");
 
         given()
                 .when().contentType(MediaType.APPLICATION_FORM_URLENCODED)

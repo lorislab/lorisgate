@@ -353,31 +353,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/TokenSuccess'
-          examples:
-            client_credentials:
-              summary: Client Credentials (no id_token, optional scope)
-              value:
-                access_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...clientcred
-                token_type: bearer
-                expires_in: 3600
-                scope: "read write"
-            password_with_openid:
-              summary: Resource Owner Password + openid (returns id_token)
-              value:
-                access_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...pwd
-                token_type: bearer
-                expires_in: 3600
-                scope: "openid profile email"
-                id_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...idpwd
-            authorization_code_with_openid:
-              summary: Authorization Code (PKCE if public client) + openid
-              value:
-                access_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...code
-                token_type: bearer
-                expires_in: 3600
-                scope: "openid"
-                id_token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...idcode
-
     OAuth2TokenError:
       description: OAuth 2.0 error response
       content:

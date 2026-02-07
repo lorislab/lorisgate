@@ -1,8 +1,11 @@
 package org.lorislab.lorisgate.domain.model;
 
-public class TokenTypes {
+public final class TokenTypes {
 
-    public static String ACCESS = "Bearer";
-    public static String ID = "ID";
-    public static String REFRESH = "Refresh";
+    public static final String ACCESS = "Bearer";
+    public static final String ID = "ID";
+    public static final String REFRESH = "Refresh";
+
+    private TokenTypes() {
+    }
 }

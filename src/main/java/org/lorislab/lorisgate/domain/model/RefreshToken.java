@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Set;
 
 import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
 
 public class RefreshToken {
 
@@ -33,8 +34,14 @@ public class RefreshToken {
         try {
             var tmp = claims.getExpirationTime();
             return Instant.now().isAfter(Instant.ofEpochSecond(tmp.getValue()));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (MalformedClaimException e) {
+            throw new Error(e);
+        }
+    }
+
+    public static class Error extends RuntimeException {
+        Error(Throwable t) {
+            super(t);
         }
     }
 }

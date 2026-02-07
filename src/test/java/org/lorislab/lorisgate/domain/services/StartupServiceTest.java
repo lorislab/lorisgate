@@ -1,5 +1,6 @@
 package org.lorislab.lorisgate.domain.services;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
 import static org.mockito.ArgumentMatchers.any;
 
 import jakarta.inject.Inject;
@@ -25,13 +26,13 @@ class StartupServiceTest {
     @Test
     void testImportFilesException() throws Exception {
         Mockito.doThrow(new RuntimeException("Error")).when(storeService).importFiles(any());
-        service.onStart(new StartupEvent());
+        assertThatNoException().isThrownBy(() -> service.onStart(new StartupEvent()));
     }
 
     @Test
     @TestConfigProperty(key = "lorisgate.store.directory", value = "")
     void testEmptyDir() {
-        service.onStart(new StartupEvent());
+        assertThatNoException().isThrownBy(() -> service.onStart(new StartupEvent()));
     }
 
 }

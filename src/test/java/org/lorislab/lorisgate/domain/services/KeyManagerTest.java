@@ -22,19 +22,19 @@ class KeyManagerTest {
     @TestConfigProperty(key = "lorisgate.key.private-key-file", value = "")
     @TestConfigProperty(key = "lorisgate.key.public-key-file", value = "")
     void testGenerateKeyPairEmpty() {
-        keyManager.init();
+        assertThatNoException().isThrownBy(() -> keyManager.init());
     }
 
     @Test
     @TestConfigProperty(key = "lorisgate.key.private-key-file", value = "")
     void testGenerateKeyPairPrivateEmpty() {
-        keyManager.init();
+        assertThatNoException().isThrownBy(() -> keyManager.init());
     }
 
     @Test
     @TestConfigProperty(key = "lorisgate.key.public-key-file", value = "")
     void testGenerateKeyPairPublicEmpty() {
-        keyManager.init();
+        assertThatNoException().isThrownBy(() -> keyManager.init());
     }
 
     @Test

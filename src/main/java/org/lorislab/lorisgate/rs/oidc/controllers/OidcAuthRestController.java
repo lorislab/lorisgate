@@ -12,9 +12,7 @@ import jakarta.ws.rs.core.UriInfo;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.lorislab.lorisgate.config.LorisGateConfig;
-import org.lorislab.lorisgate.domain.model.AuthorizationCode;
-import org.lorislab.lorisgate.domain.model.ResponseTypes;
-import org.lorislab.lorisgate.domain.model.Scopes;
+import org.lorislab.lorisgate.domain.model.*;
 import org.lorislab.lorisgate.domain.services.IssuerService;
 import org.lorislab.lorisgate.domain.services.RealmService;
 import org.lorislab.lorisgate.domain.services.TokenService;
@@ -62,13 +60,13 @@ public class OidcAuthRestController implements AuthApi {
             throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.UNAUTHORIZED_CLIENT);
         }
 
-        if (!client.getRedirectUris().contains("*")) {
-            if (!client.getRedirectUris().contains(redirectUri.toString())) {
-                throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.INVALID_REQUEST);
-            }
+        if (!client.getRedirectUris().contains("*") && !client.getRedirectUris().contains(redirectUri.toString())) {
+            throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.INVALID_REQUEST);
         }
 
-        if (asUser == null) {
+        if (asUser == null)
+
+        {
             String returnTo = String.format(
                     "/realms/%s/protocol/openid-connect/auth?response_type=%s&client_id=%s&redirect_uri=%s&scope=%s&state=%s&nonce=%s&code_challenge=%s&code_challenge_method=%s",
                     realm,
@@ -107,30 +105,37 @@ public class OidcAuthRestController implements AuthApi {
             return RestResponse.seeOther(tmp);
         }
 
-        Set<String> types = ResponseTypes.toTypes(responseType);
+        Set<String> types = ResponseTypes
+                .toTypes(responseType);
         if (types.contains(ResponseTypes.TOKEN) || types.contains(ResponseTypes.ID_TOKEN)) {
 
-            String fragment = "";
-
-            var issuer = issuerService.issuer(uriInfo, store);
-
-            if (types.contains(ResponseTypes.TOKEN)) {
-                String at = tokenService.createAccessToken(issuer, user, client, scopes);
-                fragment += "access_token=" + at + "&token_type=bearer&expires_in=" + config.oidc().tokenLifetime();
-            }
-
-            if (types.contains(ResponseTypes.ID_TOKEN)) {
-                String idt = tokenService.createIdToken(issuer, user, client, nonce);
-                fragment += (fragment.isEmpty() ? "" : "&") + "id_token=" + idt;
-            }
-
-            if (state != null) {
-                fragment += "&state=" + enc(state);
-            }
+            String fragment = createFragment(store, types, user, client, scopes, nonce, state);
             return RestResponse.seeOther(URI.create(redirectUri + "#" + fragment));
         }
 
         throw RestException.badRequest(OAuthErrorDTO.ErrorEnum.INVALID_REQUEST);
+    }
+
+    private String createFragment(Realm store, Set<String> types, User user, Client client, Set<String> scopes, String nonce,
+            String state) {
+        String fragment = "";
+
+        var issuer = issuerService.issuer(uriInfo, store);
+
+        if (types.contains(ResponseTypes.TOKEN)) {
+            String at = tokenService.createAccessToken(issuer, user, client, scopes);
+            fragment += "access_token=" + at + "&token_type=bearer&expires_in=" + config.oidc().tokenLifetime();
+        }
+
+        if (types.contains(ResponseTypes.ID_TOKEN)) {
+            String idt = tokenService.createIdToken(issuer, user, client, nonce);
+            fragment += (fragment.isEmpty() ? "" : "&") + "id_token=" + idt;
+        }
+
+        if (state != null) {
+            fragment += "&state=" + enc(state);
+        }
+        return fragment;
     }
 
     private static String enc(String s) {

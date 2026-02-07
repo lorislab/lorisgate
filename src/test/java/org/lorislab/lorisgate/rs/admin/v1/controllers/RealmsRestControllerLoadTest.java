@@ -25,7 +25,6 @@ class RealmsRestControllerLoadTest extends AbstractTest {
                 .extract().as(RealmSearchResultDTO.class);
 
         assertThat(result).isNotNull();
-        assertThat(result.getItems()).isNotNull();
-        assertThat(result.getItems().size()).isGreaterThan(2);
+        assertThat(result.getItems()).isNotNull().hasSizeGreaterThan(2);
     }
 }

@@ -12,6 +12,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,8 @@ public class JwtHelper {
         return builder.jws().keyId(keyId).sign(privateKey);
     }
 
-    public static JwtClaims parse(String issuer, String token, Key publicKey, int secondsOfAllowedClockSkew) throws Exception {
+    public static JwtClaims parse(String issuer, String token, Key publicKey, int secondsOfAllowedClockSkew)
+            throws InvalidJwtException {
         var consumer = new JwtConsumerBuilder()
                 .setRequireExpirationTime()
                 .setExpectedIssuer(issuer)
@@ -63,14 +65,14 @@ public class JwtHelper {
 
     public static RSAPrivateKey loadPrivateKeyFromPem(String filePath)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        byte[] keyBytes = getKey(PRIVATE_KEY_HEADER, PRIVATE_KEY_FOOTER, filePath);
+        byte[] keyBytes = getKey("private", PRIVATE_KEY_HEADER, PRIVATE_KEY_FOOTER, filePath);
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
         return (RSAPrivateKey) keyFactory().generatePrivate(spec);
     }
 
     public static RSAPublicKey loadPublicKeyFromPem(String filePath)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        byte[] keyBytes = getKey(PUBLIC_KEY_HEADER, PUBLIC_KEY_FOOTER, filePath);
+        byte[] keyBytes = getKey("public", PUBLIC_KEY_HEADER, PUBLIC_KEY_FOOTER, filePath);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
         return (RSAPublicKey) keyFactory().generatePublic(spec);
     }
@@ -79,12 +81,12 @@ public class JwtHelper {
         return KeyFactory.getInstance(ALGORITHM);
     }
 
-    private static byte[] getKey(String header, String footer, String filePath) throws IOException {
+    private static byte[] getKey(String name, String header, String footer, String filePath) throws IOException {
         String pem = Files.readString(java.nio.file.Path.of(filePath));
         int start = pem.indexOf(header);
         int end = pem.indexOf(footer);
         if (start < 0 || end < 0) {
-            log.error("Invalid {} key PEM format in file: {}", header.split(" ")[1], filePath);
+            log.error("Invalid {} key PEM format in file: {}", name, filePath);
             throw new Error("Invalid key PEM format");
         }
         String base64 = pem.substring(start + header.length(), end).replaceAll("\\s", "");

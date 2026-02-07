@@ -32,7 +32,7 @@ class OidcLoginFlowTest extends AbstractOidcTest {
     void testLogin() throws IOException {
 
         var verifier = "123456";
-        var code_challenge = JwtHelper.generateChallenge(verifier);
+        var codeChallenge = JwtHelper.generateChallenge(verifier);
         var homeUrl = SpecificationQuerier.query(given().basePath("/")).getURI();
         String code;
 
@@ -46,7 +46,7 @@ class OidcLoginFlowTest extends AbstractOidcTest {
                         .queryParam("state", "foo")
                         .queryParam("nonce", "n1")
                         .queryParam("code_challenge_method", "S256")
-                        .queryParam("code_challenge", code_challenge))
+                        .queryParam("code_challenge", codeChallenge))
                 .getURI();
 
         try (final WebClient webClient = createWebClient()) {

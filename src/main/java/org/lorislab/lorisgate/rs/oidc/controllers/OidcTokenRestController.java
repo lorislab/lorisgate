@@ -40,14 +40,13 @@ public class OidcTokenRestController implements TokenApi {
     @Inject
     IssuerService issuerService;
 
-    @Override
-    public RestResponse<TokenSuccessDTO> getToken(String realm, String grantType, String clientId, String authorization,
-            String clientSecret,
-            String username, String password, String scope, String code, String redirectUri, String codeVerifier,
-            String refreshToken) {
+    record ClientSecret(String client, String secret) {
+    }
 
-        if ((clientId == null || clientSecret == null) && authorization != null && authorization.startsWith("Basic ")) {
-            String decoded = new String(Base64.getDecoder().decode(authorization.substring(6)));
+    private ClientSecret clientSecret(String clientId, String clientSecret, String authorization) {
+        if ((clientId == null || clientSecret == null) && authorization != null
+                && authorization.startsWith(HttpAuth.BASIC_PREFIX)) {
+            String decoded = new String(Base64.getDecoder().decode(authorization.substring(HttpAuth.BASIC_PREFIX_LENGTH)));
             int idx = decoded.indexOf(':');
             if (idx > 0) {
                 if (clientId == null) {
@@ -58,8 +57,18 @@ public class OidcTokenRestController implements TokenApi {
                 }
             }
         }
+        return new ClientSecret(clientId, clientSecret);
+    }
 
-        if (clientId == null || grantType == null) {
+    @Override
+    public RestResponse<TokenSuccessDTO> getToken(String realm, String grantType, String clientId, String authorization,
+            String clientSecret,
+            String username, String password, String scope, String code, String redirectUri, String codeVerifier,
+            String refreshToken) {
+
+        var cs = clientSecret(clientId, clientSecret, authorization);
+
+        if (cs.client() == null || grantType == null) {
             throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_REQUEST,
                     "client_id and grant_type are required");
         }
@@ -70,22 +79,20 @@ public class OidcTokenRestController implements TokenApi {
             throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_REQUEST, "realm does not exist");
         }
 
-        if (!store.hasClient(clientId)) {
+        if (!store.hasClient(cs.client())) {
             throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_CLIENT, "Unknown client");
         }
-        var client = store.getClient(clientId);
-        if (client.isConfidential()) {
-            if (clientSecret == null || !clientSecret.equals(client.getClientSecret())) {
-                throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_CLIENT,
-                        "Invalid client credentials");
-            }
+        var client = store.getClient(cs.client());
+        if (client.isConfidential() && (cs.secret() == null || !cs.secret().equals(client.getClientSecret()))) {
+            throw RestException.unauthorized(TokenErrorDTO.ErrorEnum.INVALID_CLIENT,
+                    "Invalid client credentials");
         }
 
         var issuer = issuerService.issuer(uriInfo, store);
         var scopes = Scopes.toScopes(scope);
 
         return switch (grantType) {
-            case GrantTypes.CLIENT_CREDENTIALS -> grandTypeClientCredentials(issuer, store, client, scopes);
+            case GrantTypes.CLIENT_CREDENTIALS -> grandTypeClientCredentials(issuer, client, scopes);
             case GrantTypes.PASSWORD -> grandTypePassword(issuer, store, client, scopes, username, password);
             case GrantTypes.AUTHORIZATION_CODE ->
                 grandTypeAuthorizationCode(issuer, store, client, code, redirectUri, codeVerifier);
@@ -130,7 +137,7 @@ public class OidcTokenRestController implements TokenApi {
 
         } catch (RestException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (Exception _) {
             throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "Invalid refresh_token");
         }
     }
@@ -158,13 +165,17 @@ public class OidcTokenRestController implements TokenApi {
         return issueTokens(issuer, client, user, tmp, null, true, null);
     }
 
+    private void validateParameters(String code, String redirectUri) {
+        if (code == null || redirectUri == null) {
+            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "code and redirect_uri required");
+        }
+    }
+
     private RestResponse<TokenSuccessDTO> grandTypeAuthorizationCode(String issuer, Realm store, Client client, String code,
             String redirectUri,
             String codeVerifier) {
 
-        if (code == null || redirectUri == null) {
-            throw RestException.badRequest(TokenErrorDTO.ErrorEnum.INVALID_GRANT, "code and redirect_uri required");
-        }
+        validateParameters(code, redirectUri);
 
         var tmp = store.getAuthCode(code);
 
@@ -209,7 +220,7 @@ public class OidcTokenRestController implements TokenApi {
         return issueTokens(issuer, client, user, ac.getScopes(), ac.getNonce(), true, null);
     }
 
-    private RestResponse<TokenSuccessDTO> grandTypeClientCredentials(String issuer, Realm store, Client client,
+    private RestResponse<TokenSuccessDTO> grandTypeClientCredentials(String issuer, Client client,
             Set<String> scope) {
 
         var tmp = new HashSet<>(client.getScopes());
