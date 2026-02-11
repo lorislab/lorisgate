@@ -48,6 +48,7 @@ public class TokenService {
                 .issuedAt(now.getEpochSecond())
                 .expiresAt(exp.getEpochSecond())
                 .audience(client.getClientId())
+                .claim(ClaimNames.AZP, client.getClientId())
                 .claim(ClaimNames.TYP, TokenTypes.ID)
                 .claim(ClaimNames.PREFERRED_USERNAME, user.getUsername());
         if (nonce != null) {
@@ -64,8 +65,9 @@ public class TokenService {
         access.issuer(issuer)
                 .issuedAt(now.getEpochSecond())
                 .expiresAt(exp.getEpochSecond())
+                .audience(issuer)
                 .claim(ClaimNames.JTI, UUID.randomUUID().toString())
-                .audience(client.getClientId())
+                .claim(ClaimNames.AZP, client.getClientId())
                 .claim(ClaimNames.TYP, TokenTypes.ACCESS);
 
         if (user != null) {
