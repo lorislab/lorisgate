@@ -3,6 +3,9 @@ package org.lorislab.lorisgate.domain.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class Client {
 
     private String clientId;

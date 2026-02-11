@@ -3,6 +3,9 @@ package org.lorislab.lorisgate.domain.model;
 import java.time.Instant;
 import java.util.*;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class Realm {
 
     private String name;

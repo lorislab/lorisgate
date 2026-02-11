@@ -11,6 +11,7 @@ import org.lorislab.lorisgate.domain.services.RealmService;
 
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @Path("/admin/ui/realms")
 public class RealmsUIController {
@@ -39,9 +40,11 @@ public class RealmsUIController {
         return realm.data("container", new ContainerRealm(tmp));
     }
 
+    @RegisterForReflection
     record ContainerRealms(Collection<Realm> realms) {
     }
 
+    @RegisterForReflection
     record ContainerRealm(Realm realm) {
     }
 }

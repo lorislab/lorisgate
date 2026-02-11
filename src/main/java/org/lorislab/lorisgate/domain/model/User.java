@@ -4,6 +4,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class User {
 
     private String id = UUID.randomUUID().toString();

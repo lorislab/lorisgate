@@ -1,5 +1,8 @@
 package org.lorislab.lorisgate.domain.model;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class Role {
     private String name;
     private String description;
