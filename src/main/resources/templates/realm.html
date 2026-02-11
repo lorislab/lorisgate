@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realm: {container.realm.name}</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; background: #f5f7fb; margin: 0; padding: 24px; }
+        h1, h2, h3 { color: #1b2a4e; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 32px; }
+        th, td { border: 1px solid #cfd7e6; padding: 8px 12px; text-align: left; }
+        th { background: #e6e9f0; }
+        .section { margin-bottom: 40px; }
+        .disabled { color: #aaa; }
+        .enabled { color: #0057b8; font-weight: bold; }
+        .nowrap { white-space: nowrap; }
+    </style>
+</head>
+<body>
+    <a href="/admin/ui/realms">&larr; Back to Realms</a>
+
+    <h1>Realm: {container.realm.name}</h1>
+    <div class="section">
+        <h2>General Info</h2>
+        <table>
+            <tr><th>Name</th><td>{container.realm.name}</td></tr>
+            <tr><th>Display Name</th><td>{container.realm.displayName}</td></tr>
+            <tr><th>Frontend URL</th><td>{container.realm.frontendUrl}</td></tr>
+            <tr><th>Enabled</th><td class="enabled">{container.realm.enabled}</td></tr>
+        </table>
+    </div>
+    <div class="section">
+        <h2>Roles</h2>
+        <table>
+            <tr><th>Name</th><th>Description</th><th>Enabled</th></tr>
+            {#for role in container.realm.roles}
+            <tr>
+                <td>{role.value.name}</td>
+                <td>{role.value.description}</td>
+                <td class="{role.value.enabled ? 'enabled' : 'disabled'}">{role.value.enabled}</td>
+            </tr>
+            {/for}
+        </table>
+    </div>
+    <div class="section">
+        <h2>Clients</h2>
+        <table>
+            <tr>
+                <th>Client ID</th><th>Secret</th><th>Confidential</th><th>Scopes</th><th>Roles</th><th>Redirect URIs</th>
+            </tr>
+            {#for client in container.realm.clients}
+                <tr>
+                    <td>{client.value.clientId}</td>
+                    <td>{client.value.clientSecret}</td>
+                    <td class="{client.value.confidential ? 'enabled' : 'disabled'}">{client.value.confidential}</td>
+                    <td>{client.value.scopes != null ? client.value.scopes : '-'}</td>
+                    <td>{client.value.roles != null ? client.value.roles : '-'}</td>
+                    <td>{client.value.redirectUris != null ? client.value.redirectUris : '-'}</td>
+                </tr>
+            {/for}
+        </table>
+    </div>
+    <div class="section">
+        <h2>Users</h2>
+        <table>
+            <tr>
+                <th>ID</th><th>Username</th><th>Password</th><th>Enabled</th><th>Roles</th><th>Name</th><th>Given Name</th><th>Family Name</th><th>Email</th><th>Password</th><th>Email Verified</th><th>Groups</th>
+            </tr>
+            {#for user in container.realm.users}
+                <tr>
+                    <td>{user.value.id}</td>
+                    <td>{user.value.username}</td>
+                    <td>{user.value.password}</td>
+                    <td class="{user.value.enabled ? 'enabled' : 'disabled'}">{user.value.enabled}</td>
+                    <td>{user.value.roles != null ? user.value.roles : '-'}</td>
+                    <td>{user.value.name != null ? user.value.name : '-'}</td>
+                    <td>{user.value.givenName != null ? user.value.givenName : '-'}</td>
+                    <td>{user.value.familyName != null ? user.value.familyName : '-'}</td>
+                    <td>{user.value.email != null ? user.value.email : '-'}</td>
+                    <td class="disabled">-</td>
+                    <td class="{user.value.emailVerified ? 'enabled' : 'disabled'}">{user.value.emailVerified}</td>
+                    <td>{user.value.groups != null ? user.value.groups : '-'}</td>
+                </tr>
+            {/for}
+        </table>
+    </div>
+</body>
+</html>

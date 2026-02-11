@@ -31,9 +31,12 @@ public interface StoreServiceMapper {
     @Mapping(target = "clients", ignore = true)
     Realm createRealm(RealmDTO dto);
 
+    @Mapping(target = "name", source = "key")
     Role mapRole(String key, RoleDTO role);
 
+    @Mapping(target = "clientId", source = "key")
     Client mapClient(String key, ClientDTO client);
 
+    @Mapping(target = "username", source = "key")
     User mapUser(String key, UserDTO user);
 }
