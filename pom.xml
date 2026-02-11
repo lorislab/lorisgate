@@ -35,7 +35,7 @@
         <skipDocs>false</skipDocs>
 
         <!-- Quarkus configuration -->
-        <quarkus.version>3.31.2</quarkus.version>
+        <quarkus.version>3.31.3</quarkus.version>
 
         <!-- Maven configuration -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
