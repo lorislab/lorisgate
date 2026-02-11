@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Realm: {container.realm.name}</title>
+    <title>Lorisgate - Realm: {container.realm.name}</title>
     <style>
         html, body { height: 100%; margin: 0; }
         body { font-family: Arial, Helvetica, sans-serif; background: #f5f7fb; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
@@ -29,7 +29,7 @@
             <a class="back-link" href="/admin/ui/realms">&larr; Back to Realms</a>
             <div class="section">
                 <h3>General Info</h3>
-                <table>
+                <table id="table-general-info">
                     <tr><th>Name</th><td>{container.realm.name}</td></tr>
                     <tr><th>Display Name</th><td>{container.realm.displayName}</td></tr>
                     <tr><th>Frontend URL</th><td>{container.realm.frontendUrl}</td></tr>
@@ -38,7 +38,7 @@
             </div>
             <div class="section">
                 <h3>Roles</h3>
-                <table>
+                <table id="table-roles">
                     <tr><th>Name</th><th>Description</th><th>Enabled</th></tr>
                     {#for role in container.realm.roles}
                     <tr>
@@ -51,7 +51,7 @@
             </div>
             <div class="section">
                 <h3>Clients</h3>
-                <table>
+                <table id="table-clients">
                     <tr>
                         <th>Client ID</th><th>Secret</th><th>Confidential</th><th>Scopes</th><th>Roles</th><th>Redirect URIs</th>
                     </tr>
@@ -70,7 +70,7 @@
             <div class="section">
                 <h3>Users</h3>
                 <div style="overflow-x:auto;">
-                    <table>
+                    <table id="table-users">
                         <tr>
                             <th>ID</th><th>Username</th><th>Password</th><th>Enabled</th><th>Roles</th><th>Name</th><th>Given Name</th><th>Family Name</th><th>Email</th><th>Password</th><th>Email Verified</th><th>Groups</th>
                         </tr>
