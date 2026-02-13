@@ -4,6 +4,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.lorislab.ms</groupId>
+        <artifactId>lorislab-ms-parent</artifactId>
+        <version>0.1.0</version>
+    </parent>
+
     <groupId>org.lorislab.lorisgate</groupId>
     <artifactId>lorisgate</artifactId>
     <version>999-SNAPSHOT</version>
@@ -24,70 +30,13 @@
         </developer>
     </developers>
 
-    <properties>
-        <!-- build -->
-        <format.skip>false</format.skip>
-        <enforcer.skip>false</enforcer.skip>
-        <enforce-test-deps-scope.skip>${enforcer.skip}</enforce-test-deps-scope.skip>
-        <skipTests>false</skipTests>
-        <skipITs>${skipTests}</skipITs>
-        <skipUTs>${skipTests}</skipUTs>
-        <skipDocs>false</skipDocs>
-
-        <!-- Quarkus configuration -->
-        <quarkus.version>3.31.3</quarkus.version>
-
-        <!-- Maven configuration -->
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
-        <maven.compiler.release>25</maven.compiler.release>
-        <maven.compiler.parameters>true</maven.compiler.parameters>
-        <maven.compiler-plugin.version>3.15.0</maven.compiler-plugin.version>
-        <maven.surefire-plugin.version>3.5.4</maven.surefire-plugin.version>
-        <maven.formatter-plugin.version>2.29.0</maven.formatter-plugin.version>
-        <maven.impsort-plugin.version>1.13.0</maven.impsort-plugin.version>
-        <maven.enforcer-plugin.version>3.6.2</maven.enforcer-plugin.version>
-
-        <!-- Other -->
-        <openapitools.openapi-generator-maven-plugin.version>7.19.0</openapitools.openapi-generator-maven-plugin.version>
-        <mapstruct.version>1.6.3</mapstruct.version>
-        <assertj.version>3.27.7</assertj.version>
-        <htmlunit.version>4.21.0</htmlunit.version>
-
-        <!-- Jacoco/Sonar -->
-        <sonar.cpd.exclusions>**/mapper/**,**/mappers/**,**/dtos/**,**/dto/**,**/gen/**</sonar.cpd.exclusions>
-        <sonar.coverage.exclusions>**/model*/**/*.*,**/resources/**/*.*,**/mapper/**,**/mappers/**,**/gen/**,**/dtos/**,**/dto/**,**/*$Error.class,**/*$*Exception.class</sonar.coverage.exclusions>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-bom</artifactId>
-                <version>${quarkus.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mapstruct</groupId>
-                <artifactId>mapstruct</artifactId>
-                <version>${mapstruct.version}</version>
-                <type>jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-core</artifactId>
-                <version>${assertj.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.htmlunit</groupId>
-                <artifactId>htmlunit</artifactId>
-                <version>${htmlunit.version}</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <dependencies>
         <dependency>
@@ -126,143 +75,13 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-validator</artifactId>
         </dependency>
-
-        <!-- Build -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-container-image-docker</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-        </dependency>
-
-        <!-- Test -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>rest-assured</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jacoco</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit-mockito</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit-config</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit-component</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.htmlunit</groupId>
-            <artifactId>htmlunit</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-maven-plugin</artifactId>
-                <version>${quarkus.version}</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <properties>
-                        <quarkus.container-image.build>true</quarkus.container-image.build>
-                        <quarkus.container-image.group>localhost</quarkus.container-image.group>
-                    </properties>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler-plugin.version}</version>
-                <configuration>
-                    <compilerArgs>
-                        <arg>-parameters</arg>
-                        <arg>-Amapstruct.defaultComponentModel=jakarta-cdi</arg>
-                        <arg>-Amapstruct.defaultInjectionStrategy=constructor</arg>
-                        <arg>-Amapstruct.unmappedTargetPolicy=ERROR</arg>
-                        <arg>-Amapstruct.unmappedSourcePolicy=IGNORE</arg>
-                    </compilerArgs>
-                    <annotationProcessorPaths>
-                        <annotationProcessorPath>
-                            <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct-processor</artifactId>
-                            <version>${mapstruct.version}</version>
-                        </annotationProcessorPath>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire-plugin.version}</version>
-                <configuration>
-                    <skipTests>${skipUTs}</skipTests>
-                    <argLine>@{argLine}</argLine>
-                    <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <!--suppress UnresolvedMavenProperty -->
-                        <maven.home>${maven.home}</maven.home>
-                        <quarkus.jacoco.excludes>${sonar.coverage.exclusions}</quarkus.jacoco.excludes>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${maven.surefire-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                        <configuration>
-                            <skipTests>${skipTests}</skipTests>
-                            <skipITs>${skipITs}</skipITs>
-                            <argLine>@{argLine}</argLine>
-                            <systemPropertyVariables>
-                                <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
-                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                                <!--suppress UnresolvedMavenProperty -->
-                                <maven.home>${maven.home}</maven.home>
-                                <quarkus.jacoco.excludes>${sonar.coverage.exclusions}</quarkus.jacoco.excludes>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>${openapitools.openapi-generator-maven-plugin.version}</version>
                 <configuration>
                     <generatorName>jaxrs-spec</generatorName>
                     <modelNameSuffix>DTO</modelNameSuffix>
@@ -318,133 +137,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>net.revelc.code.formatter</groupId>
-                <artifactId>formatter-maven-plugin</artifactId>
-                <version>${maven.formatter-plugin.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>io.quarkus</groupId>
-                        <artifactId>quarkus-ide-config</artifactId>
-                        <version>${quarkus.version}</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <configFile>eclipse-format.xml</configFile>
-                    <lineEnding>LF</lineEnding>
-                    <skip>${format.skip}</skip>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>net.revelc.code</groupId>
-                <artifactId>impsort-maven-plugin</artifactId>
-                <version>${maven.impsort-plugin.version}</version>
-                <configuration>
-                    <groups>java.,javax.,jakarta.,org.,com.</groups>
-                    <staticGroups>*</staticGroups>
-                    <skip>${format.skip}</skip>
-                    <removeUnused>true</removeUnused>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>native</id>
-            <activation>
-                <property>
-                    <name>native</name>
-                </property>
-            </activation>
-            <properties>
-                <skipITs>false</skipITs>
-                <quarkus.native.enabled>true</quarkus.native.enabled>
-            </properties>
-        </profile>
-        <profile>
-            <id>format</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <property>
-                    <name>!no-format</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>net.revelc.code.formatter</groupId>
-                        <artifactId>formatter-maven-plugin</artifactId>
-                        <version>${maven.formatter-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <phase>process-sources</phase>
-                                <goals>
-                                    <goal>format</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>net.revelc.code</groupId>
-                        <artifactId>impsort-maven-plugin</artifactId>
-                        <version>${maven.impsort-plugin.version}</version>
-                        <configuration>
-                            <removeUnused>true</removeUnused>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>sort-imports</id>
-                                <goals>
-                                    <goal>sort</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>validate</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <property>
-                    <name>no-format</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>net.revelc.code.formatter</groupId>
-                        <artifactId>formatter-maven-plugin</artifactId>
-                        <version>${maven.formatter-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <phase>process-sources</phase>
-                                <goals>
-                                    <goal>validate</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>net.revelc.code</groupId>
-                        <artifactId>impsort-maven-plugin</artifactId>
-                        <version>${maven.impsort-plugin.version}</version>
-                        <configuration>
-                            <removeUnused>true</removeUnused>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>check-imports</id>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>	    
